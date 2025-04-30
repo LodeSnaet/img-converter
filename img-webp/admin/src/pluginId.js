@@ -1,1 +1,3 @@
-export const PLUGIN_ID = 'img-webp';
+const pluginId = 'img-webp';
+
+export default pluginId;
