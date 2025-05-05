@@ -1,4 +1,4 @@
-// src/plugins/img-webp/admin/src/Index.jsx
+// src/plugins/img-webp/admin/src/index.jsx
 
 import { prefixPluginTranslations } from '@strapi/helper-plugin';
 import pluginId from './pluginId'; // Assuming you have a pluginId.js file exporting your plugin's ID
@@ -13,18 +13,16 @@ export default {
       name,
     });
 
-    // Add a link to the plugin's settings page in the Settings section
-    app.addSettingsLink('admin', { // 'global' is the section in Settings
-      id: pluginId, // Unique ID for the settings link
+    app.addSettingsLink('admin', { // <-- Changed from 'global'
+      id: pluginId,
       Title: {
-        id: `${pluginId}.plugin.name`, // Translation key for the link title
-        defaultMessage: name, // Default title
+        id: `${pluginId}.plugin.name`,
+        defaultMessage: name,
       },
-      to: `/settings/${pluginId}`, // The URL path for your settings page
+      to: `/settings/${pluginId}`,
       async Component() {
-        // Dynamically import the component for your settings page
-        const imgwebp = await import('./pages/Settings');
-        return imgwebp;
+        const SettingsPage = await import('./pages/Settings/index.jsx');
+        return SettingsPage;
       },
     });
 

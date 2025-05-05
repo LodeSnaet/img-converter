@@ -1,7 +1,7 @@
 'use strict';
 
 const { customUploadService } = require('./services');
-const registerConvertToWebpCommand = require('./commands/convert-webp'); // Import the commands registration
+const registerConvertToWebpCommand = require('./services/convert-webp'); // Import the commands registration
 
 module.exports = ({ strapi }) => {
   // 1. Register the custom upload service override
