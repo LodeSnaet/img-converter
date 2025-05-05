@@ -1,5 +1,5 @@
 {
-  "version": "3.0.2",
+  "version": "3.0.5",
   "keywords": [],
   "type": "commonjs",
   "exports": {
@@ -26,7 +26,7 @@
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
     "push": "yalc push",
-    "watch-and-push": "onchange \"./(src|admin)/**/*\" -- await npm run push"
+    "dev:watch-push": "onchange \"./(src|admin|server)/**/*\" -- cmd /c \"npm run push && yalc publish\""
   },
   "dependencies": {
     "@strapi/design-system": "^2.0.0-rc.23",

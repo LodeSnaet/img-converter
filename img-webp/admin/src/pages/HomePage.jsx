@@ -1,15 +1,16 @@
 import { Main } from '@strapi/design-system';
+import { useIntl } from 'react-intl';
 
-import SettingsPage from "./Settings";
+import { getTranslation } from '../utils/getTranslation';
 
 const HomePage = () => {
+  const { formatMessage } = useIntl();
 
   return (
     <Main>
-      <SettingsPage/>
-
+      <h1>Welcome to {formatMessage({ id: getTranslation('plugin.name') })}'Hello there'</h1>
     </Main>
   );
 };
 
-export { HomePage };
+export default HomePage ;
