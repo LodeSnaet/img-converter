@@ -43,8 +43,7 @@ export default {
           // Specify the component that should be rendered when this link is clicked.
           // We use the async import pattern to load your main App component.
           Component: async () => {
-            const component = await import('./pages/App');
-            return component.default;
+            return await import('./pages/App');
           }
 
           // Optional: Add permissions if this link requires specific access
