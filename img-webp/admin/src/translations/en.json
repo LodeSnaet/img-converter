@@ -1,5 +1,5 @@
 {
-  "plugin.name": "Image to WEBP Converter Settings",
-  "homepage.title": "Image Converter Dashboard",
-  "homepage.description": "Manage your image conversion settings here."
+  "img-webp.plugin.name": "Image to WEBP Converter Settings",
+  "img-webp.homepage.title": "Image Converter Dashboard",
+  "img-webp.homepage.description": "Manage your image conversion settings here."
 }

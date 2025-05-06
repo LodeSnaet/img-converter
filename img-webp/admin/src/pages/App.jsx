@@ -1,12 +1,16 @@
-// src/plugins/img-webp/admin/src/pages/App.jsx
 
-import React from 'react';
-import HomePage from './HomePage'; // Import your HomePage component
+import { Page } from '@strapi/strapi/admin';
+import { Routes, Route } from 'react-router-dom';
+
+import HomePage from './HomePage';
 
 const App = () => {
   return (
-    <HomePage />
+    <Routes>
+      <Route index element={<HomePage />} />
+      <Route path="*" element={<Page.Error />} />
+    </Routes>
   );
 };
 
-export default App;
+export { App };

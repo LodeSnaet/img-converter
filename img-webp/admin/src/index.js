@@ -1,37 +1,43 @@
-const ImgWebp = async () => {
-  const component = await import('./pages/App');
-  return component;
+import { PLUGIN_ID } from './pluginId';
+import { Initializer } from './components/Initializer';
+import { PluginIcon } from './components/PluginIcon';
+
+const imgWebp = async () => {
+  const { App } = await import('./pages/App');
+
+  return App;
 };
 
 export default {
   register(app) {
-    app.createSettingSection(
-      {
-        id: 'img-webp-section',
-        intlLabel: {
-          id: 'img-webp.section.title',
-          defaultMessage: 'Image WebP',
-        },
+    app.addMenuLink({
+      to: `plugins/${PLUGIN_ID}`,
+      icon: PluginIcon,
+      intlLabel: {
+        id: `${PLUGIN_ID}.plugin.name`,
+        defaultMessage: PLUGIN_ID,
       },
-      [
-        {
-          id: 'img-webp-link',
-          intlLabel: {
-            id: 'img-webp.link.title',
-            defaultMessage: 'WebP Settings',
-          },
-          to: '/settings/img-webp',
-          Component: ImgWebp,
-          permissions: [],
-        },
-      ]
-    );
+      Component: imgWebp,
+    });
+
+    app.registerPlugin({
+      id: PLUGIN_ID,
+      initializer: Initializer,
+      isReady: false,
+      name: PLUGIN_ID,
+    });
   },
-  bootstrap(app) {
-    // Optional: Add post-registration logic here if needed
-  },
+
   async registerTrads({ locales }) {
-    // Optional: Register translations for your plugin
-    return {};
-  },
+    // return Promise.all(
+    //   locales.map(async (locale) => {
+    //     try {
+    //       const { default: data } = await import(`./translations/${locale}.json`); // <--- This is where the magic happens
+    //       return { data, locale };
+    //     } catch {
+    //       return { data: {}, locale }; // <--- If import fails, it returns empty data!
+    //     }
+    //   })
+    // );
+  }
 };

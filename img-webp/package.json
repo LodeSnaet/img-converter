@@ -26,13 +26,13 @@
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
     "push": "yalc push",
-    "dev:watch-push": "onchange \"./(src|admin|server)/**/*\" -- cmd /c \"npm run push && yalc publish\""
+    "publish": "yalc publish",
+    "dev:watch-push": "onchange \"./(src|admin|server)/**/*\" -- cmd /c \"npm run build && npm run push\""
   },
   "dependencies": {
     "@strapi/design-system": "^2.0.0-rc.23",
     "@strapi/icons": "^2.0.0-rc.23",
-    "react-intl": "^7.1.11",
-    "sharp": "^0.34.1"
+    "react-intl": "^7.1.11"
   },
   "devDependencies": {
     "@strapi/sdk-plugin": "^5.3.2",
