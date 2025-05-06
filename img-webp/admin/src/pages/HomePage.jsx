@@ -1,16 +1,13 @@
-import { Main } from '@strapi/design-system';
-import { useIntl } from 'react-intl';
-
-import { getTranslation } from '../utils/getTranslation';
+import { DesignSystemProvider, lightTheme } from '@strapi/design-system';
+import PluginSection from '../components/PluginSection';
 
 const HomePage = () => {
-  const { formatMessage } = useIntl();
 
   return (
-    <Main>
-      <h1>Welcome to {formatMessage({ id: getTranslation('plugin.name') })}'Hello there'</h1>
-    </Main>
+    <DesignSystemProvider locale="en-GB" theme={lightTheme}>
+        <PluginSection />
+    </DesignSystemProvider>
   );
 };
 
-export default HomePage ;
+export default HomePage;
