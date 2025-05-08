@@ -1,9 +1,11 @@
-import HomePage from './HomePage';
+import { DesignSystemProvider, lightTheme } from '@strapi/design-system';
+import PluginSection from '../components/PluginSection';
 
 const App = () => {
   return (
-    <HomePage />
-  );
+    <DesignSystemProvider locale="en-GB" theme={lightTheme}>
+      <PluginSection />
+    </DesignSystemProvider>  );
 };
 
 export default App;

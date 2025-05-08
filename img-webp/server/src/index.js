@@ -1,31 +1,29 @@
-/**
- * Application methods
- */
+// server/src/index.js
 import bootstrap from './bootstrap';
 import destroy from './destroy';
 import register from './register';
 
-/**
- * Plugin server methods
- */
 import config from './config';
 import contentTypes from './content-types';
-import controllers from './controllers';
+import createControllersObject from './controllers';
 import middlewares from './middlewares';
 import policies from './policies';
-import routes from './routes';
+import routes from './routes'; // This must now be an array
 import services from './services';
 
-export default {
-  bootstrap,
-  destroy,
-  register,
+export default ({ strapi }) => {
+  return {
+    register,
+    bootstrap,
+    destroy,
 
-  config,
-  controllers,
-  contentTypes,
-  middlewares,
-  policies,
-  routes,
-  services,
+    config,
+    contentTypes,
+
+    controllers: createControllersObject({ strapi }),
+    routes, // ✅ this is now an array
+    services,
+    policies,
+    middlewares,
+  };
 };

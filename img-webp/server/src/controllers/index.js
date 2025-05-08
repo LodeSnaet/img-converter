@@ -1,5 +1,5 @@
-import controller from './controller';
+import myController from './controller.js';
 
-export default {
-  controller,
-};
+export default ({ strapi }) => ({
+  myController,
+});
