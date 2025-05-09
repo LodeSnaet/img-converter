@@ -4,17 +4,17 @@ export default {
     type: 'content-api',
     routes: []
   },
-  admin: {
+  'admin': {
     type: 'admin',
     routes: [
       {
         method: 'GET',
         path: '/files',
-        handler: 'myController.batchConverter',
+        handler: 'controller.getFiles',
         config: {
           policies: [],
           auth: {
-            scope: ['admin']
+            scope: ['admin::isAuthenticated']
           },
           description: 'Retrieve all image files for batch conversion',
           tag: {
@@ -27,11 +27,11 @@ export default {
       {
         method: 'POST',
         path: '/files/:id/convert',
-        handler: 'myController.convertSingleFile',
+        handler: 'controller.convertSingleFile',
         config: {
           policies: [],
           auth: {
-            scope: ['admin']
+            scope: ['admin::isAuthenticated']
           },
           description: 'Convert a single file to WebP format',
           tag: {
@@ -44,11 +44,11 @@ export default {
       {
         method: 'POST',
         path: '/process-batch',
-        handler: 'myController.processBatchFiles',
+        handler: 'controller.processBatchFiles',
         config: {
           policies: [],
           auth: {
-            scope: ['admin']
+            scope: ['admin::isAuthenticated']
           },
           description: 'Process and convert multiple files to WebP format',
           tag: {
