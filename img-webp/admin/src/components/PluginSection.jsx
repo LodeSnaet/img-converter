@@ -1,7 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useFetchClient } from '@strapi/strapi/admin';
-const { get } = useFetchClient();
-
 import { Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th, Checkbox, Pagination, NextLink, PageLink, PreviousLink, Alert } from "@strapi/design-system";
 import styled from 'styled-components';
 import { useIntl } from 'react-intl';
@@ -23,7 +20,7 @@ const NewTypeText = styled(Typography)`
   margin-left: 4px;
 `;
 
-const PluginSection = () => {
+function PluginSection() {
   const { formatMessage } = useIntl();
 
   const [files, setFiles] = useState([]);
@@ -72,30 +69,6 @@ const PluginSection = () => {
   const DescriptionTypography = styled(Typography)`
     margin-block-start: ${({ theme }) => theme.spaces.s1};
   `;
-
-
-  const fetchFiles = async () => {
-    try {
-      const timestamp = Date.now();
-
-      const response = await get(`/upload/files?_=${timestamp}`);
-      const data = await response.json();
-
-      const images = data
-        .map(file => ({
-          id: file.id,
-          name: file.name || file.fileName,
-          url: file.url,
-          mime: file.mime,
-          type: convertApi.determineFileType(file.mime),
-        }))
-        .filter(file => file.type !== null);
-
-      return { data: images };
-    } catch (err) {
-      console.log(500, 'Fout bij ophalen bestanden');
-    }
-  }
 
   const handleClick = async (e) => {
     e.preventDefault();
@@ -193,7 +166,7 @@ const PluginSection = () => {
         // Haal de bestanden opnieuw op om de updates te zien
         setTimeout(async () => {
           console.log("Bestanden opnieuw ophalen na conversie...");
-          const response = await fetchFiles;
+          const response = await fetchImages.fetchFiles();
           console.log("Nieuwe bestandsgegevens:", response.data.map(file => ({
             id: file.id,
             name: file.name,
