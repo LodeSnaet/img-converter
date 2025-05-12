@@ -6,6 +6,34 @@ export default {
   },
   'admin': {
     type: 'admin',
-    routes: []
+    routes: [
+      {
+        method: 'POST',
+        path: '/convert-to-webp',
+        handler: 'controller.convertToWebp',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
+      {
+        method: 'POST',
+        path: '/convert-to-png',
+        handler: 'controller.convertToPng',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
+      {
+        method: 'POST',
+        path: '/convert-to-jpg',
+        handler: 'controller.convertToJpg',
+        config: {
+          policies: [],
+          auth: false
+        }
+      }
+    ]
   }
 };

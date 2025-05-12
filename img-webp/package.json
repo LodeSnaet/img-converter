@@ -26,8 +26,7 @@
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
     "push": "yalc push",
-    "publish": "yalc publish",
-    "dev:watch-push": "onchange \"./(src|admin|server)/**/*\" -- cmd /c \"npm run build && npm run push\""
+    "publish": "yalc publish"
   },
   "dependencies": {
     "@strapi/design-system": "^2.0.0-rc.23",
