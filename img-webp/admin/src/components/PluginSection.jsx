@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th, Checkbox, Pagination } from "@strapi/design-system";
+import { Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th, Checkbox, Pagination, Dots, NextLink, PageLink, PreviousLink } from "@strapi/design-system";
 import styled from 'styled-components';
 import { useIntl } from 'react-intl';
 
@@ -20,6 +20,12 @@ function PluginSection() {
     flex-direction: column;
     padding-block-start: 40px;
     padding-block-end: 40px;
+  `;
+
+  const Nav = styled(Pagination)`
+    display: flex;
+    justify-content: center;
+    width: 100%;
   `;
 
   const ContentBox = styled(Box)`
@@ -51,7 +57,7 @@ function PluginSection() {
     e.preventDefault();
     const response = await fetchImages.fetchFiles();
     setFiles(response.data);
-    console.log('Fetched files:', response.data);
+    console.log('Fetched files:', response.data); // Controleer de data
   }
 
   const handleCheckboxChange = useCallback(
@@ -93,9 +99,16 @@ function PluginSection() {
     // Get the files for the current page
     const paginatedFiles = files.slice(startIndex, endIndex);
 
-    const pageCount = Math.ceil(files.length / pageSize);
+    let pageCount = Math.ceil(files.length / pageSize);
+
+    // Check if the last page is empty
+    if (files.length > 0 && files.length % pageSize === 0) {
+        pageCount = files.length / pageSize;
+    }
 
   console.log('Files:', selectedFiles);
+  console.log('files.length:', files.length);
+  console.log('pageCount:', pageCount);
   return (
     <MainBox>
       <PaddedBox>
@@ -200,11 +213,24 @@ function PluginSection() {
               </Tbody>
             </Table>
             {pageCount > 1 && (
-              <Pagination
+              <Nav
                 pageCount={pageCount}
                 currentPage={page}
                 onPageChange={setPage}
-              />
+              >
+                <PreviousLink onClick={() => setPage(prev => prev - 1)}>Vorige</PreviousLink>
+                {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNumber => (
+                  <PageLink
+                    key={pageNumber}
+                    number={pageNumber}
+                    onClick={() => setPage(pageNumber)}
+                    aria-current={pageNumber === page ? 'page' : undefined}
+                  >
+                    {pageNumber}
+                  </PageLink>
+                ))}
+                <NextLink onClick={() => setPage(prev => prev + 1)}>Volgende</NextLink>
+              </Nav>
             )}
           </ContentBox>
         )}
