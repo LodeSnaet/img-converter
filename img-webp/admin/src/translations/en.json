@@ -3,5 +3,6 @@
   "img-webp.plugin.name": "Image to WEBP",
   "img-webp.homepage.title": "Image Converter Dashboard",
   "img-webp.homepage.description": "Manage your image conversion settings here.",
-  "img-webp.buttonpage.description": "Fetch all the uploaded images in a list"
+  "img-webp.buttonpage.description": "Fetch all the uploaded images in a list",
+  "img-webp.convertpage.description": "Select action you want to complete"
 }
