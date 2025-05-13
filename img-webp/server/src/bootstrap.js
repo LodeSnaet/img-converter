@@ -83,9 +83,6 @@ module.exports = ({ strapi }) => {
           } catch (error) {
             console.error(`[IMG-WEBP] Fout bij conversie: ${error.message}`);
           }
-        } else {
-          console.log('[IMG-WEBP] Auto-conversie is uitgeschakeld');
-          return;
         }
       }
     });
