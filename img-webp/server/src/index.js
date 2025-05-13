@@ -10,7 +10,6 @@ import middlewares from './middlewares';
 import policies from './policies';
 import routes from './routes'; // This must now be an array
 import services from './services';
-import utils from './utils';
 
 export default ({ strapi }) => {
 

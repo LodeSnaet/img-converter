@@ -49,7 +49,8 @@ const convertApi = {
       jpg: ['image/png', 'image/webp']
     };
     return targetMap[target]?.includes(currentMime);
-  }
+  },
+
 };
 
 export default convertApi;

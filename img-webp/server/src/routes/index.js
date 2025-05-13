@@ -43,6 +43,24 @@ export default {
           auth: false
         }
       },
+      {
+        method: 'POST',
+        path: '/set-auto-convert',
+        handler: 'controller.setAutoConvert',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
+      {
+        method: 'GET',
+        path: '/get-auto-convert',
+        handler: 'controller.getAutoConvert',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
     ]
   }
 };

@@ -688,7 +688,60 @@ const createControllerMethods = ({ strapi }) => ({
     console.error('Fout bij JPG conversie:', error);
     return ctx.badRequest(`Fout bij JPG conversie: ${error.message}`);
   }
-}
+},
+// Voeg deze methodes toe aan je controller object:
+
+  // Schakel de automatische conversie in of uit
+  async setAutoConvert(ctx) {
+    try {
+      const { enabled } = ctx.request.body;
+
+      console.log('Auto convert is:', enabled)
+
+
+      if (typeof enabled !== 'boolean') {
+        return ctx.badRequest('Enabled parameter moet een boolean zijn');
+      }
+
+      // Sla de voorkeur op in de plugin configuratie
+      await strapi.store({
+        type: 'plugin',
+        name: 'img-webp',
+        key: 'autoConvertEnabled'
+      }).set({ value: enabled });
+
+      console.log(`Auto-convert is nu: ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
+
+      return ctx.send({
+        enabled,
+        message: `Automatische conversie is ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`
+      });
+    } catch (error) {
+      console.error('Fout bij het instellen van auto-convert:', error);
+      return ctx.badRequest(`Fout: ${error.message}`);
+    }
+  },
+  async getAutoConvert(ctx) {
+    try {
+
+      // Haal de voorkeur op uit de plugin configuratie
+      const storedValue = await strapi.store({
+        type: 'plugin',
+        name: 'img-webp',
+        key: 'autoConvertEnabled'
+      }).get();
+
+      // De standaardwaarde is 'false' als er nog niets is opgeslagen
+      const enabled = storedValue?.value === true;
+
+      return ctx.send({
+        enabled,
+      });
+    } catch (error) {
+      console.error('Fout bij het ophalen van auto-convert status:', error);
+      return ctx.badRequest(`Fout: ${error.message}`);
+    }
+  }
 });
 
 export default createControllerMethods;
