@@ -710,7 +710,7 @@ const createControllerMethods = ({ strapi }) => ({
         key: 'autoConvertEnabled'
       }).set({ value: enabled });
 
-      console.log(`Auto-convert is nu: ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
+      console.log(`[AUTO-CONVERT] is nu: ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
 
       return ctx.send({
         enabled,
