@@ -1,1 +1,5 @@
-export default {};
+'use strict';
+
+
+export default {
+};

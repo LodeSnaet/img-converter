@@ -12,6 +12,71 @@ const createControllerMethods = ({ strapi }) => ({
       .service('service')
       .getWelcomeMessage();
   },
+  async autoWebp(ctx) {
+    try {
+      // Controleer of er een bestandsupload is
+      if (!ctx.request.files || !ctx.request.files.files) {
+        return ctx.badRequest('Geen bestand geüpload');
+      }
+
+      const files = Array.isArray(ctx.request.files.files)
+        ? ctx.request.files.files
+        : [ctx.request.files.files];
+
+      const results = [];
+
+      // Verwerk elk bestand
+      for (const file of files) {
+        // Controleer of het bestand een jpg of png is
+        if (file.type.startsWith('image/') &&
+          (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') || file.name.endsWith('.png'))) {
+
+          try {
+            // Lees het bestand
+            const buffer = fs.readFileSync(file.path);
+
+            // Maak een nieuw bestandspad voor het WEBP-bestand
+            const fileInfo = path.parse(file.name);
+            const webpFilename = `${fileInfo.name}.webp`;
+            const webpPath = path.join(path.dirname(file.path), webpFilename);
+
+            // Converteer naar WEBP
+            await sharp(buffer)
+              .webp({ quality: 85 })
+              .toFile(webpPath);
+
+            // Voeg het resultaat toe
+            results.push({
+              originalFile: file.name,
+              convertedFile: webpFilename,
+              success: true,
+              path: webpPath
+            });
+          } catch (error) {
+            results.push({
+              originalFile: file.name,
+              success: false,
+              error: error.message
+            });
+          }
+        } else {
+          results.push({
+            originalFile: file.name,
+            success: false,
+            error: 'Bestand is geen JPG of PNG'
+          });
+        }
+      }
+
+      return ctx.send({
+        message: 'Verwerking voltooid',
+        results
+      });
+    } catch (error) {
+      return ctx.badRequest(`Verwerking mislukt: ${error.message}`);
+    }
+  },
+
   async convertToWebp(ctx) {
     try {
       console.log("WebP conversie gestart");

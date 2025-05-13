@@ -33,7 +33,16 @@ export default {
           policies: [],
           auth: false
         }
-      }
+      },
+      {
+        method: 'POST',
+        path: '/auto-webp',
+        handler: 'controller.autoWebp',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
     ]
   }
 };
