@@ -61,6 +61,24 @@ export default {
           auth: false
         }
       },
+      {
+        method: 'POST',
+        path: '/selected-files',
+        handler: 'controller.setSelectedFiles',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
+      {
+        method: 'GET',
+        path: '/selected-files',
+        handler: 'controller.getSelectedFiles',
+        config: {
+          policies: [],
+          auth: false
+        }
+      },
     ]
   }
 };

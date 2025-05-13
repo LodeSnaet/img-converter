@@ -1,4 +1,4 @@
-const convertApi = {
+const fetchImages = {
   determineFileType: (mime)=> {
     try {
       const excludeTypes = ['image/svg+xml', 'video/mp4', 'image/gif','application/pdf'];
@@ -33,7 +33,7 @@ const convertApi = {
           name: file.name || file.fileName,
           url: file.url,
           mime: file.mime,
-          type: convertApi.determineFileType(file.mime),
+          type: fetchImages.determineFileType(file.mime),
         }))
         .filter(file => file.type !== null);
 
@@ -53,4 +53,4 @@ const convertApi = {
 
 };
 
-export default convertApi;
+export default fetchImages;

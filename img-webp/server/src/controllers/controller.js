@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 import convertUtils from '../utils/convert-utils';
+let selectedFiles = [];
 
 const createControllerMethods = ({ strapi }) => ({
-  // Existing method
+
   index(ctx) {
     ctx.body = strapi
       .plugin('img-webp')
@@ -76,12 +77,11 @@ const createControllerMethods = ({ strapi }) => ({
       return ctx.badRequest(`Verwerking mislukt: ${error.message}`);
     }
   },
-
   async convertToWebp(ctx) {
     try {
-      console.log("WebP conversie gestart");
+      // console.log("WebP conversie gestart");
       const { files } = ctx.request.body;
-      console.log("Ontvangen bestanden voor WebP conversie:", files);
+      // console.log("Ontvangen bestanden voor WebP conversie:", files);
 
       if (!files || !Array.isArray(files) || files.length === 0) {
         return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
@@ -96,7 +96,7 @@ const createControllerMethods = ({ strapi }) => ({
           const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
             populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
           });
-          console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
+          // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
 
           if (!fileData) {
             conversionResults.push({
@@ -122,9 +122,9 @@ const createControllerMethods = ({ strapi }) => ({
             const webpPath = path.join(originalDir, webpName);
             const webpUrl = originalUrl.replace(originalExt, '.webp');
 
-            console.log('Origineel pad:', originalPath);
-            console.log('WebP pad:', webpPath);
-            console.log('WebP URL:', webpUrl);
+            // console.log('Origineel pad:', originalPath);
+            // console.log('WebP pad:', webpPath);
+            // console.log('WebP URL:', webpUrl);
 
             if (!fs.existsSync(originalPath)) {
               conversionResults.push({
@@ -156,7 +156,7 @@ const createControllerMethods = ({ strapi }) => ({
 
               // Converteer alle formaten als ze bestaan
               if (fileData.formats) {
-                console.log("Converteren van afgeleide versies...");
+                // console.log("Converteren van afgeleide versies...");
 
                 for (const [formatName, formatData] of Object.entries(fileData.formats)) {
                   if (formatData && formatData.url) {
@@ -170,7 +170,7 @@ const createControllerMethods = ({ strapi }) => ({
                     const newFormatPath = path.join(formatDir, newFormatName);
                     const newFormatUrl = formatUrl.replace(formatExt, '.webp');
 
-                    console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+                    // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
 
                     if (fs.existsSync(formatPath)) {
                       try {
@@ -267,10 +267,10 @@ const createControllerMethods = ({ strapi }) => ({
         console.error("Fout bij vernieuwen van media library:", err);
       }
 
-      console.log("WebP conversie voltooid. Resultaten:", {
-        totalConverted: conversionResults.filter(r => r.success).length,
-        totalFailed: conversionResults.filter(r => !r.success).length
-      });
+      // console.log("WebP conversie voltooid. Resultaten:", {
+      //   totalConverted: conversionResults.filter(r => r.success).length,
+      //   totalFailed: conversionResults.filter(r => !r.success).length
+      // });
 
       return ctx.send({
         message: 'Beeldconversieproces voltooid.',
@@ -286,9 +286,9 @@ const createControllerMethods = ({ strapi }) => ({
   },
   async convertToPng(ctx) {
   try {
-    console.log("PNG conversie gestart");
+    // console.log("PNG conversie gestart");
     const { files } = ctx.request.body;
-    console.log("Ontvangen bestanden voor PNG conversie:", files);
+    // console.log("Ontvangen bestanden voor PNG conversie:", files);
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
@@ -303,7 +303,7 @@ const createControllerMethods = ({ strapi }) => ({
         const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
           populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
         });
-        console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
+        // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
 
         if (!fileData) {
           conversionResults.push({
@@ -328,9 +328,9 @@ const createControllerMethods = ({ strapi }) => ({
           const pngPath = path.join(originalDir, pngName);
           const pngUrl = originalUrl.replace(originalExt, '.png');
 
-          console.log('Origineel pad:', originalPath);
-          console.log('PNG pad:', pngPath);
-          console.log('PNG URL:', pngUrl);
+          // console.log('Origineel pad:', originalPath);
+          // console.log('PNG pad:', pngPath);
+          // console.log('PNG URL:', pngUrl);
 
           if (!fs.existsSync(originalPath)) {
             conversionResults.push({
@@ -360,7 +360,9 @@ const createControllerMethods = ({ strapi }) => ({
 
             // Converteer alle formaten als ze bestaan
             if (fileData.formats) {
+/*
               console.log("Converteren van afgeleide versies...");
+*/
 
               for (const [formatName, formatData] of Object.entries(fileData.formats)) {
                 if (formatData && formatData.url) {
@@ -374,7 +376,7 @@ const createControllerMethods = ({ strapi }) => ({
                   const newFormatPath = path.join(formatDir, newFormatName);
                   const newFormatUrl = formatUrl.replace(formatExt, '.png');
 
-                  console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+                  // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
 
                   if (fs.existsSync(formatPath)) {
                     try {
@@ -469,11 +471,11 @@ const createControllerMethods = ({ strapi }) => ({
       console.error("Fout bij vernieuwen van media library:", err);
     }
 
-    // Fix de bug met totalFailed
-    console.log("PNG conversie voltooid. Resultaten:", {
-      totalConverted: conversionResults.filter(r => r.success).length,
-      totalFailed: conversionResults.filter(r => !r.success).length // Correctie hier
-    });
+    // // Fix de bug met totalFailed
+    // console.log("PNG conversie voltooid. Resultaten:", {
+    //   totalConverted: conversionResults.filter(r => r.success).length,
+    //   totalFailed: conversionResults.filter(r => !r.success).length // Correctie hier
+    // });
 
     return ctx.send({
       message: 'PNG conversieproces voltooid.',
@@ -489,9 +491,9 @@ const createControllerMethods = ({ strapi }) => ({
 },
   async convertToJpg(ctx) {
   try {
-    console.log("JPG conversie gestart");
+    // console.log("JPG conversie gestart");
     const { files } = ctx.request.body;
-    console.log("Ontvangen bestanden voor JPG conversie:", files);
+    // console.log("Ontvangen bestanden voor JPG conversie:", files);
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
@@ -506,7 +508,7 @@ const createControllerMethods = ({ strapi }) => ({
         const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
           populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
         });
-        console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
+        // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
 
         if (!fileData) {
           conversionResults.push({
@@ -531,9 +533,9 @@ const createControllerMethods = ({ strapi }) => ({
           const jpgPath = path.join(originalDir, jpgPath);
           const jpgUrl = originalUrl.replace(originalExt, '.jpg');
 
-          console.log('Origineel pad:', originalPath);
-          console.log('JPG pad:', jpgPath);
-          console.log('JPG URL:', jpgUrl);
+          // console.log('Origineel pad:', originalPath);
+          // console.log('JPG pad:', jpgPath);
+          // console.log('JPG URL:', jpgUrl);
 
           if (!fs.existsSync(originalPath)) {
             conversionResults.push({
@@ -563,7 +565,7 @@ const createControllerMethods = ({ strapi }) => ({
 
             // Converteer alle formaten als ze bestaan
             if (fileData.formats) {
-              console.log("Converteren van afgeleide versies...");
+              // console.log("Converteren van afgeleide versies...");
 
               for (const [formatName, formatData] of Object.entries(fileData.formats)) {
                 if (formatData && formatData.url) {
@@ -577,7 +579,7 @@ const createControllerMethods = ({ strapi }) => ({
                   const newFormatPath = path.join(formatDir, newFormatName);
                   const newFormatUrl = formatUrl.replace(formatExt, '.jpg');
 
-                  console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+                  // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
 
                   if (fs.existsSync(formatPath)) {
                     try {
@@ -672,10 +674,10 @@ const createControllerMethods = ({ strapi }) => ({
       console.error("Fout bij vernieuwen van media library:", err);
     }
 
-    console.log("JPG conversie voltooid. Resultaten:", {
-      totalConverted: conversionResults.filter(r => r.success).length,
-      totalFailed: conversionResults.filter(r => !r.success).length
-    });
+    // console.log("JPG conversie voltooid. Resultaten:", {
+    //   totalConverted: conversionResults.filter(r => r.success).length,
+    //   totalFailed: conversionResults.filter(r => !r.success).length
+    // });
 
     return ctx.send({
       message: 'JPG conversieproces voltooid.',
@@ -689,14 +691,11 @@ const createControllerMethods = ({ strapi }) => ({
     return ctx.badRequest(`Fout bij JPG conversie: ${error.message}`);
   }
 },
-// Voeg deze methodes toe aan je controller object:
-
-  // Schakel de automatische conversie in of uit
   async setAutoConvert(ctx) {
     try {
       const { enabled } = ctx.request.body;
 
-      console.log('Auto convert is:', enabled)
+      // console.log('Auto convert is:', enabled)
 
 
       if (typeof enabled !== 'boolean') {
@@ -710,7 +709,7 @@ const createControllerMethods = ({ strapi }) => ({
         key: 'autoConvertEnabled'
       }).set({ value: enabled });
 
-      console.log(`[AUTO-CONVERT] is nu: ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
+      // console.log(`[AUTO-CONVERT] is nu: ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
 
       return ctx.send({
         enabled,
@@ -741,6 +740,36 @@ const createControllerMethods = ({ strapi }) => ({
       console.error('Fout bij het ophalen van auto-convert status:', error);
       return ctx.badRequest(`Fout: ${error.message}`);
     }
+  },
+  // Tijdelijke opslag voor geselecteerde bestanden per sessie
+  selectedFilesStore: new Map(),
+
+  async setSelectedFiles(ctx) {
+    try {
+      const data = ctx.request.body;
+
+      if (!data.files || !Array.isArray(data.files)) {
+        return ctx.badRequest('Ongeldige aanvraag: fileIds moet een array van bestand-ID\'s zijn');
+      }
+
+      // Eenvoudig de array toewijzen aan de globale variabele
+      selectedFiles = data.files;
+
+      return ctx.send({
+        success: true,
+        message: 'Geselecteerde bestanden opgeslagen',
+        count: data.files.length
+      });
+    } catch (error) {
+      console.error('[IMG-WEBP] Fout bij opslaan van geselecteerde bestanden:', error);
+      return ctx.badRequest('Er is een fout opgetreden bij het opslaan van selecties', { error: error.message });
+    }
+  },
+
+  async getSelectedFiles(ctx) {
+    return ctx.send({
+      files: selectedFiles
+    });
   }
 });
 

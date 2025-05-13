@@ -1,63 +1,522 @@
+// import React, { useEffect, useState, useCallback } from 'react';
+// import {
+//   Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th,
+//   Checkbox, Pagination, NextLink, PageLink, PreviousLink, Alert, Tooltip, Toggle
+// } from "@strapi/design-system";
+// import styled from 'styled-components';
+// import { useIntl } from 'react-intl';
+//
+// import { getTranslation } from "../utils/getTranslation";
+// import fetchImages from '../api/fetch-images';
+// import convertImages from '../api/convert-images';
+// import utilsImages from '../api/utils-images';
+// import autoConvertImages from '../api/auto-convert-images';
+// import selectedFiles from '../api/selected-files';
+//
+// // Styled components
+// const StrikethroughText = styled(Typography)`
+//   text-decoration: line-through;
+//   color: #d02b20;
+//   font-size: 0.8rem;
+// `;
+//
+// const NewTypeText = styled(Typography)`
+//   color: #5cb176;
+//   font-weight: bold;
+//   margin-left: 4px;
+// `;
+//
+// const PaddedBox = styled(Box)`
+//   display: flex;
+//   flex-direction: column;
+//   padding-block-start: 40px;
+//   padding-block-end: 40px;
+// `;
+//
+// const Nav = styled(Pagination)`
+//   display: flex;
+//   justify-content: center;
+//   width: 100%;
+// `;
+//
+// const ContentBox = styled(Box)`
+//   display: flex;
+//   flex-direction: column;
+//   align-items: start;
+//   gap: 16px;
+//   border-radius: 4px;
+//   background-color: #fff;
+//   padding-block: 24px;
+//   padding-inline: 32px;
+// `;
+//
+// const FlexBox = styled(Box)`
+//   display: flex;
+//   flex-direction: row;
+//   gap: 16px;
+// `;
+//
+// const MainBox = styled(Main)`
+//   padding-inline-start: 56px;
+//   padding-inline-end: 56px;
+// `;
+//
+// const DescriptionTypography = styled(Typography)`
+//   margin-block-start: ${({ theme }) => theme.spaces.s1};
+// `;
+//
+// const NotificationContainer = styled(Box)`
+//   position: fixed;
+//   top: 70px;
+//   left: 50%;
+//   transform: translateX(-50%);
+//   z-index: 1000;
+//   width: 500px;
+//   max-width: 90vw;
+//   animation: slideDown 0.3s ease-out;
+//
+//   @keyframes slideDown {
+//     0% {
+//       transform: translate(-50%, -20px);
+//       opacity: 0;
+//     }
+//     100% {
+//       transform: translate(-50%, 0);
+//       opacity: 1;
+//     }
+//   }
+// `;
+//
+// function PluginSection() {
+//   const { formatMessage } = useIntl();
+//   const PAGE_SIZE = 7;
+//
+//   // State
+//   const [files, setFiles] = useState([]);
+//   const [page, setPage] = useState(1);
+//   const [conversionResults, setConversionResults] = useState([]);
+//   const [showAlert, setShowAlert] = useState(false);
+//   const [alertInfo, setAlertInfo] = useState({ type: 'success', message: '' });
+//   const [autoConvert, setAutoConvert] = useState(false);
+//   // Nieuwe state voor geselecteerde bestanden
+//   const [checkedFiles, setCheckedFiles] = useState([]);
+//
+//   // Pagination berekeningen
+//   const startIndex = (page - 1) * PAGE_SIZE;
+//   const endIndex = startIndex + PAGE_SIZE;
+//   const paginatedFiles = files.slice(startIndex, endIndex);
+//   const pageCount = Math.ceil(files.length / PAGE_SIZE);
+//   const areAllSelected = paginatedFiles.length > 0 &&
+//     paginatedFiles.every(file => checkedFiles.some(f => f.id === file.id));
+//
+//   // Effect hooks
+//   useEffect(() => {
+//     const getSettings = async () => {
+//       const enabled = await autoConvertImages.getStatus();
+//       setAutoConvert(enabled);
+//     };
+//     getSettings();
+//   }, []);
+//
+//   // Event handlers
+//   const showNotification = (type, message) => {
+//     setAlertInfo({ type, message });
+//     setShowAlert(true);
+//     setTimeout(() => setShowAlert(false), 5000);
+//   };
+//
+//   const handleFetchImages = async (e) => {
+//     e.preventDefault();
+//     const response = await fetchImages.fetchFiles();
+//     setFiles(response.data);
+//     setConversionResults([]);
+//   };
+//
+//   const handleCheckboxChange = useCallback((file) => {
+//     return async () => {
+//       // Controleer of het bestand al geselecteerd is
+//       const isSelected = checkedFiles.some(f => f.id === file.id);
+//       // Maak nieuwe array met geselecteerde bestanden (toevoegen of verwijderen)
+//       const newCheckedFiles = isSelected
+//         ? checkedFiles.filter(f => f.id !== file.id)
+//         : [...checkedFiles, file];
+//
+//       // Update lokale staat
+//       setCheckedFiles(newCheckedFiles);
+//
+//       try {
+//         // Update API met geselecteerde bestanden
+//         await selectedFiles.setSelectedFiles(newCheckedFiles);
+//       } catch (error) {
+//         showNotification(
+//           'danger',
+//           `Fout bij het bijwerken van de selectie: ${error.message}`
+//         );
+//         // Als er een fout optreedt, herstel de vorige status
+//         setCheckedFiles(checkedFiles);
+//       }
+//     };
+//   }, [checkedFiles, showNotification]);
+//
+//   const handleSelectAll = async () => {
+//     // Als alle bestanden geselecteerd zijn, deselecteer alles, anders selecteer alles
+//     const newCheckedFiles = areAllSelected ? [] : paginatedFiles;
+//
+//     // Update lokale staat
+//     setCheckedFiles(newCheckedFiles);
+//
+//     try {
+//       // Update API met geselecteerde bestanden
+//       await selectedFiles.setSelectedFiles(newCheckedFiles);
+//     } catch (error) {
+//       showNotification(
+//         'danger',
+//         `Fout bij het bijwerken van de selectie: ${error.message}`
+//       );
+//       // Als er een fout optreedt, herstel de vorige status
+//       setCheckedFiles(checkedFiles);
+//     }
+//   };
+//
+//   const handleToggleChange = async () => {
+//     const newState = !autoConvert;
+//     setAutoConvert(newState);
+//
+//     try {
+//       await autoConvertImages.toggle(newState);
+//       showNotification(
+//         'success',
+//         `Automatisch converteren naar WebP is ${newState ? 'ingeschakeld' : 'uitgeschakeld'}.`
+//       );
+//     } catch (error) {
+//       setAutoConvert(!newState);
+//       showNotification(
+//         'danger',
+//         `Fout bij het bijwerken van instellingen: ${error.message}`
+//       );
+//     }
+//   };
+//
+//   // Helper functies
+//   const isFileSelected = (file) => checkedFiles.some(f => f.id === file.id);
+//   const isFileConverted = (fileId) => conversionResults.some(r => r.id === fileId && r.success);
+//   const getConversionResult = (fileId) => conversionResults.find(r => r.id === fileId);
+//
+//
+//   return (
+//     <MainBox>
+//       {showAlert && (
+//         <NotificationContainer>
+//           <Alert
+//             closeLabel="Sluiten"
+//             title={
+//               alertInfo.type === 'success' ? 'Gelukt!' :
+//               alertInfo.type === 'warning' ? 'Let op!' :
+//               alertInfo.type === 'info' ? 'Informatie' : 'Fout'
+//             }
+//             variant={alertInfo.type}
+//             onClose={() => setShowAlert(false)}
+//           >
+//             {alertInfo.message}
+//           </Alert>
+//         </NotificationContainer>
+//       )}
+//
+//       <PaddedBox>
+//         <Typography variant="alpha">
+//           {formatMessage({
+//             id: getTranslation('homepage.title'),
+//             defaultMessage: 'Img-Webp Plugin',
+//           })}
+//         </Typography>
+//         <DescriptionTypography variant="omega" textColor="neutral600">
+//           {formatMessage({
+//             id: getTranslation('homepage.description'),
+//             defaultMessage: 'Convert and optimize images to WebP format during media upload.',
+//           })}
+//         </DescriptionTypography>
+//       </PaddedBox>
+//
+//       <Box style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'start' }}>
+//         <Box style={{display:'flex', flexDirection: 'row', justifyContent: 'space-around', gap: '16px'}}>
+//           <ContentBox>
+//             <PaddedBox style={{ paddingBlock: '0px' }}>
+//               <Typography variant="beta">
+//                 {formatMessage({
+//                   id: getTranslation('buttonpage.description'),
+//                   defaultMessage: 'Convert and optimize images to WebP format during media upload.',
+//                 })}
+//               </Typography>
+//               {files.length > 0 && checkedFiles.length === 0 && (
+//                 <Typography variant="epsilon" textColor="neutral600" style={{ marginBottom: '8px' }}>
+//                   Please select an image before you can start an action
+//                 </Typography>
+//               )}
+//             </PaddedBox>
+//             <LinkButton onClick={handleFetchImages} size="M" variant="default">
+//               Fetch Image Files
+//             </LinkButton>
+//           </ContentBox>
+//
+//           <ContentBox>
+//             <PaddedBox style={{ paddingBlock: '0px' }}>
+//               <Typography variant="beta">
+//                 {formatMessage({
+//                   id: getTranslation('autoconvert.description'),
+//                   defaultMessage: 'Turn on auto convert to WebP?',
+//                 })}
+//               </Typography>
+//             </PaddedBox>
+//             <Toggle
+//               label="Auto convert to WebP"
+//               hint="When checked images get converted to WebP's automatically when uploaded."
+//               name="autoConvertToggle"
+//               onLabel="Yes"
+//               offLabel="No"
+//               checked={autoConvert}
+//               onChange={handleToggleChange}
+//             />
+//           </ContentBox>
+//         </Box>
+//
+//         {files.length > 0 && checkedFiles.length > 0 && (
+//           <ContentBox>
+//             <PaddedBox style={{ paddingBlock: '0px' }}>
+//               <Typography variant="beta">
+//                 {formatMessage({
+//                   id: getTranslation('convertpage.description'),
+//                   defaultMessage: 'Select action you want to complete',
+//                 })}
+//               </Typography>
+//               <Typography variant="epsilon" textColor="neutral600" style={{ marginBottom: '8px' }}>
+//                 {checkedFiles.length} {checkedFiles.length === 1 ? 'bestand' : 'bestanden'} geselecteerd
+//               </Typography>
+//             </PaddedBox>
+//
+//             <Box>
+//               {!utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) &&
+//                !utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) &&
+//                !utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) && (
+//                 <Typography variant="pi" textColor="danger600">
+//                   Geen van de geselecteerde bestanden kan worden geconverteerd. Selecteer afbeeldingsbestanden.
+//                 </Typography>
+//               )}
+//             </Box>
+//
+//             <FlexBox>
+//               {utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) ? (
+//                 <LinkButton onClick={convertImages.img2webp} size="M" variant="default">
+//                   IMG - WEBP
+//                 </LinkButton>
+//               ) : checkedFiles.length > 0 && (
+//                 <Tooltip description="Geen bestanden geselecteerd die naar WebP kunnen worden geconverteerd">
+//                   <Box>
+//                     <LinkButton disabled size="M" variant="secondary">
+//                       IMG - WEBP
+//                     </LinkButton>
+//                   </Box>
+//                 </Tooltip>
+//               )}
+//
+//               {utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) ? (
+//                 <LinkButton onClick={convertImages.img2png} size="M" variant="default">
+//                   IMG - PNG
+//                 </LinkButton>
+//               ) : checkedFiles.length > 0 && (
+//                 <Tooltip description="Geen bestanden geselecteerd die naar PNG kunnen worden geconverteerd">
+//                   <Box>
+//                     <LinkButton disabled size="M" variant="secondary">
+//                       IMG - PNG
+//                     </LinkButton>
+//                   </Box>
+//                 </Tooltip>
+//               )}
+//
+//               {utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) ? (
+//                 <LinkButton onClick={convertImages.img2jpg} size="M" variant="default">
+//                   IMG - JPG
+//                 </LinkButton>
+//               ) : checkedFiles.length > 0 && (
+//                 <Tooltip description="Geen bestanden geselecteerd die naar JPG kunnen worden geconverteerd">
+//                   <Box>
+//                     <LinkButton disabled size="M" variant="secondary">
+//                       IMG - JPG
+//                     </LinkButton>
+//                   </Box>
+//                 </Tooltip>
+//               )}
+//             </FlexBox>
+//           </ContentBox>
+//         )}
+//
+//         {files.length > 0 && (
+//           <ContentBox>
+//             <Table colCount={files.length + 1}>
+//               <Thead>
+//                 <Tr>
+//                   <Th style={{ pointerEvents: 'auto' }}>
+//                     <Checkbox
+//                       aria-label="Select all entries"
+//                       checked={areAllSelected}
+//                       indeterminate={checkedFiles.length > 0 && !areAllSelected}
+//                       onCheckedChange={handleSelectAll}
+//                     />
+//                   </Th>
+//                   <Th><Typography variant="sigma">PREVIEW</Typography></Th>
+//                   <Th><Typography variant="sigma">ID</Typography></Th>
+//                   <Th><Typography variant="sigma">URL</Typography></Th>
+//                   <Th><Typography variant="sigma">TYPE</Typography></Th>
+//                 </Tr>
+//               </Thead>
+//               <Tbody>
+//                 {paginatedFiles.map((file) => {
+//                   const conversionResult = getConversionResult(file.id);
+//                   const isConverted = isFileConverted(file.id);
+//
+//                   return (
+//                     <Tr key={file.id}>
+//                       <Td style={{ pointerEvents: 'auto' }}>
+//                         <Checkbox
+//                           aria-label={`Select file ${file.name}`}
+//                           checked={isFileSelected(file)}
+//                           onCheckedChange={handleCheckboxChange(file)}
+//                         />
+//                       </Td>
+//                       <Td>
+//                         <Box padding={1} style={{ width: '50px', height: '50px' }}>
+//                           {file.url ? (
+//                             <img
+//                               src={`${file.url}?t=${Date.now()}`}
+//                               alt={`Preview of ${file.name || file.id}`}
+//                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+//                             />
+//                           ) : (
+//                             <Typography variant="omega">No preview</Typography>
+//                           )}
+//                         </Box>
+//                       </Td>
+//                       <Td>
+//                         <Typography textColor="neutral800">{file.id}</Typography>
+//                       </Td>
+//                       <Td>
+//                         <Typography textColor="neutral800">{file.name || 'N/A'}</Typography>
+//                       </Td>
+//                       <Td>
+//                         {isConverted ? (
+//                           <Box>
+//                             <StrikethroughText>{conversionResult.name.split('.').pop().toUpperCase()}</StrikethroughText>
+//                             <NewTypeText>{file.type}</NewTypeText>
+//                           </Box>
+//                         ) : (
+//                           <Typography textColor="neutral800">{file.type || 'N/A'}</Typography>
+//                         )}
+//                       </Td>
+//                     </Tr>
+//                   );
+//                 })}
+//               </Tbody>
+//             </Table>
+//
+//             {/* Paginering */}
+//             {pageCount > 1 && (
+//               <Nav pageCount={pageCount} currentPage={page} onPageChange={setPage}>
+//                 <PreviousLink onClick={() => setPage(prev => Math.max(1, prev - 1))}>
+//                   Vorige
+//                 </PreviousLink>
+//
+//                 {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNumber => (
+//                   <PageLink
+//                     key={pageNumber}
+//                     number={pageNumber}
+//                     onClick={() => setPage(pageNumber)}
+//                     aria-current={pageNumber === page ? 'page' : undefined}
+//                   >
+//                     {pageNumber}
+//                   </PageLink>
+//                 ))}
+//
+//                 <NextLink onClick={() => setPage(prev => Math.min(pageCount, prev + 1))}>
+//                   Volgende
+//                 </NextLink>
+//               </Nav>
+//             )}
+//           </ContentBox>
+//         )}
+//       </Box>
+//     </MainBox>
+//   );
+// }
+//
+// export default PluginSection;
+
+
 import React, { useEffect, useState, useCallback } from 'react';
-import { Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th, Checkbox, Pagination, NextLink, PageLink, PreviousLink, Alert, Tooltip, Toggle } from "@strapi/design-system";
+import {
+  Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th,
+  Checkbox, Pagination, NextLink, PageLink, PreviousLink, Alert, Tooltip, Toggle,
+  Loader // Import Loader if you want to show a loading state during conversion
+} from "@strapi/design-system";
 import styled from 'styled-components';
 import { useIntl } from 'react-intl';
 
 import { getTranslation } from "../utils/getTranslation";
 import fetchImages from '../api/fetch-images';
+import convertImages from '../api/convert-images'; // Import the refactored API module
+import utilsImages from '../api/utils-images';
+import autoConvertImages from '../api/auto-convert-images';
+import selectedFiles from '../api/selected-files'; // Used to update backend selection state
 
-// Styled component voor doorgestreepte tekst
+// Styled components (keeping them as provided)
 const StrikethroughText = styled(Typography)`
   text-decoration: line-through;
-  color: #d02b20; /* Rode kleur */
+  color: #d02b20;
   font-size: 0.8rem;
 `;
 
-// Styled component voor succesvolle conversies
 const NewTypeText = styled(Typography)`
-  color: #5cb176; /* Groene kleur */
+  color: #5cb176;
   font-weight: bold;
   margin-left: 4px;
 `;
 
 const PaddedBox = styled(Box)`
-    display: flex;
-    flex-direction: column;
-    padding-block-start: 40px;
-    padding-block-end: 40px;
-  `;
+  display: flex;
+  flex-direction: column;
+  padding-block-start: 40px;
+  padding-block-end: 40px;
+`;
 
 const Nav = styled(Pagination)`
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  `;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+`;
 
 const ContentBox = styled(Box)`
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 16px;
-    border-radius: 4px;
-    background-color: #fff;
-    padding-block: 24px;
-    padding-inline: 32px;
-  `;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 16px;
+  border-radius: 4px;
+  background-color: #fff;
+  padding-block: 24px;
+  padding-inline: 32px;
+`;
 
 const FlexBox = styled(Box)`
-    display: flex;
-    flex-direction: row;
-    gap: 16px;
-  `;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+`;
 
 const MainBox = styled(Main)`
-    padding-inline-start: 56px;
-    padding-inline-end: 56px;
-  `;
+  padding-inline-start: 56px;
+  padding-inline-end: 56px;
+`;
 
 const DescriptionTypography = styled(Typography)`
-    margin-block-start: ${({ theme }) => theme.spaces.s1};
-  `;
+  margin-block-start: ${({ theme }) => theme.spaces.s1};
+`;
 
 const NotificationContainer = styled(Box)`
   position: fixed;
@@ -79,435 +538,225 @@ const NotificationContainer = styled(Box)`
       opacity: 1;
     }
   }
-
 `;
-
-// In PluginSection.jsx, voeg deze imports toe
-// Voeg deze functies toe
-const toggleAutoConvert = async (enabled) => {
-  try {
-    const response = await fetch('/img-webp/set-auto-convert', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ enabled }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Auto-convert settings updated:', result);
-
-    return result;
-  } catch (error) {
-    console.error("Error updating auto-convert settings:", error);
-    throw error;
-  }
-};
-
-const fetchAutoConvertSettings = async () => {
-  try {
-    const response = await fetch('/img-webp/get-auto-convert');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.enabled;
-  } catch (error) {
-    console.error("Error fetching auto-convert settings:", error);
-    return false; // Standaardwaarde is uitgeschakeld bij een fout
-  }
-};
-
-
 
 function PluginSection() {
   const { formatMessage } = useIntl();
+  const PAGE_SIZE = 7;
 
-  const [files, setFiles] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  // State
+  const [files, setFiles] = useState([]); // State for the main list of files
   const [page, setPage] = useState(1);
-  const [conversionResults, setConversionResults] = useState([]);
+  const [conversionResults, setConversionResults] = useState([]); // State for tracking conversion results per file
   const [showAlert, setShowAlert] = useState(false);
   const [alertInfo, setAlertInfo] = useState({ type: 'success', message: '' });
   const [autoConvert, setAutoConvert] = useState(false);
-  const pageSize = 7;
+  const [checkedFiles, setCheckedFiles] = useState([]); // State for files selected in the current view
+  const [isLoading, setIsLoading] = useState(false); // State to show loading indicator
 
+  // Pagination calculations
+  const startIndex = (page - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const paginatedFiles = files.slice(startIndex, endIndex);
+  const pageCount = Math.ceil(files.length / PAGE_SIZE);
+  // Check if all files on the *current page* are selected
+  const areAllSelected = paginatedFiles.length > 0 &&
+    paginatedFiles.every(file => checkedFiles.some(f => f.id === file.id));
 
-  const hasConvertibleFilesForWebP = () => {
-    if (selectedFiles.length === 0) return false;
-
-    return selectedFiles.some(selectedFile => {
-      const fullFile = files.find(f => f.id === selectedFile.id);
-      if (!fullFile || !fullFile.mime) return false;
-
-      // Controleer of het een afbeelding is die naar WebP kan worden geconverteerd
-      return (
-        (fullFile.mime.startsWith('image/') &&
-          fullFile.mime !== 'image/webp' &&
-          fullFile.mime !== 'image/svg+xml')
-      );
-    });
-  };
-
-  const hasConvertibleFilesForPNG = () => {
-    if (selectedFiles.length === 0) return false;
-
-    return selectedFiles.some(selectedFile => {
-      const fullFile = files.find(f => f.id === selectedFile.id);
-      if (!fullFile || !fullFile.mime) return false;
-
-      // Controleer of het een afbeelding is die naar PNG kan worden geconverteerd
-      return (
-        (fullFile.mime.startsWith('image/') &&
-          fullFile.mime !== 'image/png' &&
-          fullFile.mime !== 'image/svg+xml')
-      );
-    });
-  };
-
-  const hasConvertibleFilesForJPG = () => {
-    if (selectedFiles.length === 0) return false;
-
-    return selectedFiles.some(selectedFile => {
-      const fullFile = files.find(f => f.id === selectedFile.id);
-      if (!fullFile || !fullFile.mime) return false;
-
-      // Controleer of het een afbeelding is die naar JPG kan worden geconverteerd
-      // JPG ondersteunt geen transparantie, dus SVG en PNG met transparantie zijn niet ideaal,
-      // maar we tonen de knop toch omdat het technisch mogelijk is
-      return (
-        (fullFile.mime.startsWith('image/') &&
-          fullFile.mime !== 'image/jpeg' &&
-          fullFile.mime !== 'image/jpg')
-      );
-    });
-  };
-
+  // Effect hooks
   useEffect(() => {
+    // Load settings on mount
     const getSettings = async () => {
-      const enabled = await fetchAutoConvertSettings();
-      setAutoConvert(enabled);
+      try {
+        const enabled = await autoConvertImages.getStatus();
+        setAutoConvert(enabled);
+      } catch (error) {
+        console.error('Failed to fetch auto-convert settings:', error);
+        showNotification('danger', 'Fout bij het laden van instellingen.');
+      }
     };
-
     getSettings();
-  }, []);
 
+    // Optionally, fetch initial files on mount as well
+    // handleFetchImages(); // Uncomment if you want files to load automatically
 
-  const handleClick = async (e) => {
-    e.preventDefault();
-    const response = await fetchImages.fetchFiles();
-    setFiles(response.data);
-    // Wis alle conversieresultaten bij een nieuwe fetch
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Effect to clear conversion results when files change (e.g., pagination, refetch)
+  useEffect(() => {
     setConversionResults([]);
-    console.log('Fetched files:', response.data);
-  }
+  }, [files]);
 
-  const handleCheckboxChange = useCallback(
-    (file) => {
-      return () => {
-        setSelectedFiles(prev => {
-          const isSelected = prev.some(f => f.id === file.id);
-          if (isSelected) {
-            return prev.filter(f => f.id !== file.id);
-          } else {
-            return [...prev, file];
-          }
-        });
-      };
-    },
-    [setSelectedFiles]
-  );
 
-  const isFileSelected = (file) => {
-    return selectedFiles.some(f => f.id === file.id);
-  };
-
-  // Controleer of een bestand succesvol is geconverteerd
-  const isFileConverted = (fileId) => {
-    return conversionResults.some(r => r.id === fileId && r.success);
-  };
-
-  // Haal het conversieresultaat op voor een bestand
-  const getConversionResult = (fileId) => {
-    return conversionResults.find(r => r.id === fileId);
-  };
-
-  // Functie om een notificatie te tonen
-  const showNotification = (type, message) => {
+  // Event handlers
+  const showNotification = useCallback((type, message) => {
     setAlertInfo({ type, message });
     setShowAlert(true);
+    // Auto-hide the alert after 5 seconds
+    const timer = setTimeout(() => setShowAlert(false), 5000);
+    // Clear timeout if a new alert is shown before the previous one hides
+    return () => clearTimeout(timer);
+  }, []); // useCallback memoizes the function
 
-    // Verberg notificatie na 5 seconden
-    setTimeout(() => {
-      setShowAlert(false);
-    }, 5000);
-  };
-
-  const img2webp = async () => {
-    if (selectedFiles.length === 0) {
-      showNotification('warning', 'Geen bestanden geselecteerd voor conversie.');
-      return;
-    }
-
+  const handleFetchImages = async (e) => {
+    e?.preventDefault(); // Prevent default if triggered by an event
+    setIsLoading(true);
     try {
-      // Define the URL of your backend plugin endpoint
-      const backendEndpoint = '/img-webp/convert-to-webp';
-
-      // Make the POST request
-      const response = await fetch(backendEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ files: selectedFiles }),
-      });
-
-      // Check if the request was successful
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Backend conversion API returned an error:", response.status, errorData);
-        showNotification('danger', `Fout bij conversie: ${errorData.message || response.statusText}`);
-        return;
-      }
-
-      // If the request was successful (status 2xx)
-      const result = await response.json();
-
-      // Sla de resultaten op in de state
-      setConversionResults(result.results);
-
-      // Reset geselecteerde bestanden na conversie
-      setSelectedFiles([]);
-
-      // Toon melding over resultaat
-      if (result.totalConverted > 0) {
-        showNotification('success', `${result.totalConverted} bestanden succesvol geconverteerd naar WebP.`);
-
-        // Haal de bestanden opnieuw op om de updates te zien
-        setTimeout(async () => {
-          const response = await fetchImages.fetchFiles();
-          setFiles(response.data);
-        }, 2000); // Langer wachten (2 seconden)
-      } else {
-        showNotification('warning', 'Geen bestanden konden worden geconverteerd.');
-      }
+      const response = await fetchImages.fetchFiles(); // Fetch all files
+      setFiles(response.data); // Update component state with files
+      setPage(1); // Reset to first page
+      setCheckedFiles([]); // Clear selected files when refetching the list
+      await selectedFiles.setSelectedFiles([]); // Also clear selected files state on the backend
+      setConversionResults([]); // Clear previous conversion results
+      showNotification('success', 'Bestanden opgehaald.');
     } catch (error) {
-      console.error("Error calling backend conversion API:", error);
-      showNotification('danger', `Netwerkfout bij conversie: ${error.message}`);
+      console.error('Error fetching files:', error);
+      showNotification('danger', `Fout bij het ophalen van bestanden: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const img2png = async () => {
-    if (selectedFiles.length === 0) {
-      showNotification('warning', 'Geen bestanden geselecteerd voor conversie.');
-      return;
-    }
+  const handleCheckboxChange = useCallback((file) => {
+    return async () => {
+      const isSelected = checkedFiles.some(f => f.id === file.id);
+      const newCheckedFiles = isSelected
+        ? checkedFiles.filter(f => f.id !== file.id)
+        : [...checkedFiles, file];
 
+      setCheckedFiles(newCheckedFiles); // Update local state immediately for responsiveness
 
-    // Controleer welke bestandstypen je hebt geselecteerd
-    selectedFiles.forEach(file => {
-      const fullFileInfo = files.find(f => f.id === file.id);
-    });
-
-    try {
-      // Dit kan anders zijn dan wat je denkt - controleer de exacte URL
-      const backendEndpoint = '/img-webp/convert-to-png';
-
-      const requestBody = JSON.stringify({ files: selectedFiles });
-
-      const response = await fetch(backendEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: requestBody,
-      });
-
-
-      // Probeer eerst de ruwe response te bekijken
-      const responseText = await response.text();
-
-      let result;
       try {
-        // Probeer het als JSON te parsen
-        result = JSON.parse(responseText);
-      } catch (e) {
-        console.error("Error parsing response:", e);
-        showNotification('danger', `Fout bij het verwerken van de response: ${e.message}`);
-        return;
+        // Update API with the *new* list of selected files
+        await selectedFiles.setSelectedFiles(newCheckedFiles);
+        // Notification is optional here, might be too noisy
+        // showNotification('success', 'Selectie bijgewerkt.');
+      } catch (error) {
+        showNotification(
+          'danger',
+          `Fout bij het bijwerken van de selectie op de backend: ${error.message}`
+        );
+        // If API update fails, revert the local state to the previous state
+        setCheckedFiles(checkedFiles);
       }
+    };
+  }, [checkedFiles, showNotification, selectedFiles]); // Include dependencies
 
-      // Onderzoek waarom de conversies mislukten
-      if (result.results && result.results.length > 0) {
-        const failedResults = result.results.filter(r => !r.success);
+  const handleSelectAll = async () => {
+    // Determine the new list of checked files
+    const newCheckedFiles = areAllSelected
+      ? checkedFiles.filter(file => !paginatedFiles.some(pf => pf.id === file.id)) // Deselect page files
+      : [...checkedFiles.filter(file => !paginatedFiles.some(pf => pf.id === file.id)), ...paginatedFiles]; // Add page files
 
-        // Groepeer de redenen
-        const reasons = {};
-        failedResults.forEach(item => {
-          reasons[item.message] = (reasons[item.message] || 0) + 1;
-        });
-      }
-
-      // De rest van je functie...
-      setConversionResults(result.results);
-      setSelectedFiles([]);
-
-      if (result.totalConverted > 0) {
-        showNotification('success', `${result.totalConverted} bestanden succesvol geconverteerd naar PNG.`);
-
-        setTimeout(async () => {
-          const response = await fetchImages.fetchFiles();
-          setFiles(response.data);
-        }, 2000); // Langer wachten (2 seconden)
-      } else {
-        showNotification('warning', 'Geen bestanden konden worden geconverteerd naar PNG.');
-      }
-    } catch (error) {
-      console.error("Error tijdens PNG conversie:", error);
-      showNotification('danger', `Netwerkfout bij conversie: ${error.message}`);
-    }
-  };
-
-  const img2jpg = async () => {
-    if (selectedFiles.length === 0) {
-      showNotification('warning', 'Geen bestanden geselecteerd voor conversie.');
-      return;
-    }
-
-    selectedFiles.forEach(file => {
-      const fullFileInfo = files.find(f => f.id === file.id);
-    });
+    setCheckedFiles(newCheckedFiles); // Update local state immediately
 
     try {
-      const backendEndpoint = '/img-webp/convert-to-jpg';
-
-      const requestBody = JSON.stringify({ files: selectedFiles });
-
-      const response = await fetch(backendEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: requestBody,
-      });
-
-      const responseText = await response.text();
-
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch (e) {
-        console.error("Error parsing response:", e);
-        showNotification('danger', `Fout bij het verwerken van de response: ${e.message}`);
-        return;
-      }
-
-
-      if (result.results && result.results.length > 0) {
-        const failedResults = result.results.filter(r => !r.success);
-
-        const reasons = {};
-        failedResults.forEach(item => {
-          reasons[item.message] = (reasons[item.message] || 0) + 1;
-        });
-      }
-
-      setConversionResults(result.results);
-      setSelectedFiles([]);
-
-      if (result.totalConverted > 0) {
-        showNotification('success', `${result.totalConverted} bestanden succesvol geconverteerd naar JPG.`);
-
-        setTimeout(async () => {
-          const response = await fetchImages.fetchFiles();
-          setFiles(response.data);
-        }, 2000); // Langer wachten (2 seconden)
-      } else {
-        showNotification('warning', 'Geen bestanden konden worden geconverteerd naar JPG.');
-      }
+      // Update API with the *entire* new list of selected files (across all pages)
+      await selectedFiles.setSelectedFiles(newCheckedFiles);
+      // Notification is optional here
+      // showNotification('success', 'Selectie bijgewerkt.');
     } catch (error) {
-      console.error("Error tijdens JPG conversie:", error);
-      showNotification('danger', `Netwerkfout bij conversie: ${error.message}`);
+      showNotification(
+        'danger',
+        `Fout bij het bijwerken van de selectie op de backend: ${error.message}`
+      );
+      // If API update fails, revert the local state
+      setCheckedFiles(checkedFiles);
     }
   };
 
-  // Calculate the start and end index for the current page
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
+  const handleToggleChange = async () => {
+    const newState = !autoConvert;
+    setAutoConvert(newState); // Optimistic update
 
-  // Get the files for the current page
-  const paginatedFiles = files.slice(startIndex, endIndex);
-
-  let pageCount = Math.ceil(files.length / pageSize);
-
-  // Check if the last page is empty
-  if (files.length > 0 && files.length % pageSize === 0) {
-    pageCount = files.length / pageSize;
-  }
-
-  // Functie voor "Selecteer alles" checkbox
-  const handleSelectAll = () => {
-    if (selectedFiles.length === paginatedFiles.length) {
-      // Als alle items op de huidige pagina zijn geselecteerd, deselecteer alles
-      setSelectedFiles([]);
-    } else {
-      // Anders selecteer alle items op de huidige pagina
-      setSelectedFiles(paginatedFiles);
+    try {
+      await autoConvertImages.toggle(newState);
+      showNotification(
+        'success',
+        `Automatisch converteren naar WebP is ${newState ? 'ingeschakeld' : 'uitgeschakeld'}.`
+      );
+    } catch (error) {
+      // Revert state if API call fails
+      setAutoConvert(!newState);
+      showNotification(
+        'danger',
+        `Fout bij het bijwerken van instellingen: ${error.message}`
+      );
     }
   };
 
-  // Controleer of alle items op de huidige pagina zijn geselecteerd
-  const areAllSelected = paginatedFiles.length > 0 &&
-    paginatedFiles.every(file => selectedFiles.some(f => f.id === file.id));
+  // New Handlers for Conversion Buttons
+  const handleConvert = useCallback(async (converterFunction, conversionType) => {
+    setIsLoading(true);
+    setConversionResults([]); // Clear previous conversion results
 
-// Update je handleToggleChange functie
-const handleToggleChange = async () => {
-  const newState = !autoConvert;
-  setAutoConvert(newState);
+    try {
+      // The API function (converterFunction) now fetches selected files internally
+      // and sends them for conversion.
+      showNotification('info', `Starten met converteren naar ${conversionType}...`);
+      const result = await converterFunction(); // Call the API function
 
-  try {
-    await toggleAutoConvert(newState);
-    console.log('Toggle is nu:', newState);
+      // Handle the response from the API
+      if (result.skipped) {
+        showNotification('warning', result.message || `Geen bestanden geselecteerd voor conversie naar ${conversionType}.`);
+      } else {
+        setConversionResults(result.results); // Update state with results for the table
+        setCheckedFiles([]); // Clear local selection after conversion
+        await selectedFiles.setSelectedFiles([]); // Clear backend selection after conversion
 
-    showNotification(
-      'success',
-      `Automatisch converteren naar WebP is ${newState ? 'ingeschakeld' : 'uitgeschakeld'}.`
-    );
-  } catch (error) {
-    // Als er een fout optreedt, herstel dan de UI-status
-    setAutoConvert(!newState);
-    showNotification(
-      'danger',
-      `Fout bij het bijwerken van instellingen: ${error.message}`
-    );
-  }
-};
+        if (result.totalConverted > 0) {
+          showNotification('success', `${result.totalConverted} bestanden succesvol geconverteerd naar ${conversionType}.`);
+          // Refetch ALL files after successful conversion to update the table previews and types
+          // Use a small delay to allow backend processing to finish completely if needed
+          setTimeout(handleFetchImages, 1000); // Delay refetch slightly
+        } else if (result.results && result.results.length > 0) {
+          // If totalConverted is 0 but there are results, it means all failed
+          showNotification('warning', `Geen bestanden konden worden geconverteerd naar ${conversionType}.`);
+        } else {
+          // Unexpected scenario
+          showNotification('warning', `Conversie naar ${conversionType} voltoooid, maar met onverwacht resultaat.`);
+        }
+      }
 
-// Voeg deze useEffect toe
-useEffect(() => {
-  const getSettings = async () => {
-    const enabled = await fetchAutoConvertSettings();
-    setAutoConvert(enabled);
-  };
+    } catch (error) {
+      console.error(`Error during ${conversionType} conversion:`, error);
+      // Use the error message from the API or a generic one
+      showNotification('danger', `Conversie naar ${conversionType} mislukt: ${error.message || 'Onbekende fout.'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification, selectedFiles, handleFetchImages]); // Include dependencies
 
-  getSettings();
-}, []);
+  // Memoized conversion handlers using the generic handler
+  const handleConvertWebP = useCallback(() => handleConvert(convertImages.img2webp, 'WebP'), [handleConvert]);
+  const handleConvertPNG = useCallback(() => handleConvert(convertImages.img2png, 'PNG'), [handleConvert]);
+  const handleConvertJPG = useCallback(() => handleConvert(convertImages.img2jpg, 'JPG'), [handleConvert]);
+
+
+  // Helper functions (keeping as provided, assuming they use state correctly)
+  // Note: utilsImages.hasConvertibleFiles... should ideally check `checkedFiles`
+  // based on how the buttons are conditionally rendered. Let's assume they are updated
+  // or update the calls below to pass `checkedFiles` and potentially `files` if needed
+  // Looking at the original snippet again, it seems they DO expect checkedFiles and files:
+  // {utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) ? (...)}
+  // Let's make sure the helpers in utilsImages accept these arguments.
+  const isFileSelected = (file) => checkedFiles.some(f => f.id === file.id);
+  const isFileConverted = (fileId) => conversionResults.some(r => r.id === fileId && r.success);
+  const getConversionResult = (fileId) => conversionResults.find(r => r.id === fileId);
 
 
   return (
     <MainBox>
+      {/* Notification component */}
       {showAlert && (
         <NotificationContainer>
           <Alert
             closeLabel="Sluiten"
-            title={alertInfo.type === 'success' ? 'Gelukt!' :
-                  alertInfo.type === 'warning' ? 'Let op!' :
-                  alertInfo.type === 'info' ? 'Informatie' : 'Fout'}
+            title={
+              alertInfo.type === 'success' ? 'Gelukt!' :
+                alertInfo.type === 'warning' ? 'Let op!' :
+                  alertInfo.type === 'info' ? 'Informatie' : 'Fout'
+            }
             variant={alertInfo.type}
             onClose={() => setShowAlert(false)}
           >
@@ -530,6 +779,7 @@ useEffect(() => {
           })}
         </DescriptionTypography>
       </PaddedBox>
+
       <Box style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'start' }}>
         <Box style={{display:'flex', flexDirection: 'row', justifyContent: 'space-around', gap: '16px'}}>
           <ContentBox>
@@ -540,16 +790,23 @@ useEffect(() => {
                   defaultMessage: 'Convert and optimize images to WebP format during media upload.',
                 })}
               </Typography>
-              {files.length > 0 && selectedFiles.length === 0 && (
+              {/* Hint text conditional on files fetched and no files selected */}
+              {files.length > 0 && checkedFiles.length === 0 && (
+                // This text will only show if files are loaded but none are checked
                 <Typography variant="epsilon" textColor="neutral600" style={{ marginBottom: '8px' }}>
                   Please select an image before you can start an action
                 </Typography>
               )}
             </PaddedBox>
-            <LinkButton onClick={handleClick} size="M" variant="default">
-              Fetch Image Files
-            </LinkButton>
+            {/* Loading indicator for fetching files */}
+            <FlexBox style={{alignItems: 'center', gap: '8px'}}>
+              <LinkButton onClick={handleFetchImages} size="M" variant="default" disabled={isLoading}>
+                Fetch Image Files
+              </LinkButton>
+              {isLoading && <Loader small />}
+            </FlexBox>
           </ContentBox>
+
           <ContentBox>
             <PaddedBox style={{ paddingBlock: '0px' }}>
               <Typography variant="beta">
@@ -559,6 +816,7 @@ useEffect(() => {
                 })}
               </Typography>
             </PaddedBox>
+            {/* Toggle for auto-convert */}
             <Toggle
               label="Auto convert to WebP"
               hint="When checked images get converted to WebP's automatically when uploaded."
@@ -567,114 +825,127 @@ useEffect(() => {
               offLabel="No"
               checked={autoConvert}
               onChange={handleToggleChange}
+              disabled={isLoading} // Disable toggle while loading
             />
           </ContentBox>
         </Box>
 
-        {files.length > 0 && selectedFiles.length > 0 && (
+        {/* Conversion Actions Section - Show only if files are loaded AND at least one file is selected */}
+        {files.length > 0 && checkedFiles.length > 0 && (
           <ContentBox>
             <PaddedBox style={{ paddingBlock: '0px' }}>
               <Typography variant="beta">
-              {formatMessage({
-                id: getTranslation('convertpage.description'),
-                defaultMessage: 'Select action you want to complete',
-              })}
-            </Typography>
+                {formatMessage({
+                  id: getTranslation('convertpage.description'),
+                  defaultMessage: 'Select action you want to complete',
+                })}
+              </Typography>
               <Typography variant="epsilon" textColor="neutral600" style={{ marginBottom: '8px' }}>
-                {selectedFiles.length} {selectedFiles.length === 1 ? 'bestand' : 'bestanden'} geselecteerd
+                {checkedFiles.length} {checkedFiles.length === 1 ? 'bestand' : 'bestanden'} geselecteerd
               </Typography>
             </PaddedBox>
 
+            {/* Check if *any* selected files are convertible by any method */}
             <Box>
-              {!hasConvertibleFilesForWebP() && !hasConvertibleFilesForPNG() && !hasConvertibleFilesForJPG() && (
-                <Typography variant="pi" textColor="danger600">
-                  Geen van de geselecteerde bestanden kan worden geconverteerd. Selecteer afbeeldingsbestanden.
-                </Typography>
-              )}
+              {!utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) &&
+                !utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) &&
+                !utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) && (
+                  <Typography variant="pi" textColor="danger600">
+                    Geen van de geselecteerde bestanden kan worden geconverteerd naar de geselecteerde typen.
+                  </Typography>
+                )}
             </Box>
 
-            <FlexBox>
-              {hasConvertibleFilesForWebP() ? (
-                <LinkButton onClick={img2webp} size="M" variant="default">
+            <FlexBox style={{alignItems: 'center', gap: '16px'}}>
+              {/* WebP Convert Button */}
+              {utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) ? (
+                <LinkButton onClick={handleConvertWebP} size="M" variant="default" disabled={isLoading}>
                   IMG - WEBP
                 </LinkButton>
-              ) : selectedFiles.length > 0 && (
-                <Tooltip description="Geen bestanden geselecteerd die naar WebP kunnen worden geconverteerd">
-                  <Box>
-                    <LinkButton disabled size="M" variant="secondary">
-                      IMG - WEBP
-                    </LinkButton>
-                  </Box>
-                </Tooltip>
+              ) : ( // Button disabled if no convertible files for this type among selected ones
+                // Show disabled button only if *some* files are selected, otherwise the whole section is hidden
+                checkedFiles.length > 0 && (
+                  <Tooltip description="Geen bestanden geselecteerd die naar WebP kunnen worden geconverteerd">
+                    <Box>
+                      <LinkButton disabled size="M" variant="secondary">
+                        IMG - WEBP
+                      </LinkButton>
+                    </Box>
+                  </Tooltip>
+                )
               )}
 
-              {hasConvertibleFilesForPNG() ? (
-                <LinkButton onClick={img2png} size="M" variant="default">
+              {/* PNG Convert Button */}
+              {utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) ? (
+                <LinkButton onClick={handleConvertPNG} size="M" variant="default" disabled={isLoading}>
                   IMG - PNG
                 </LinkButton>
-              ) : selectedFiles.length > 0 && (
-                <Tooltip description="Geen bestanden geselecteerd die naar PNG kunnen worden geconverteerd">
-                  <Box>
-                    <LinkButton disabled size="M" variant="secondary">
-                      IMG - PNG
-                    </LinkButton>
-                  </Box>
-                </Tooltip>
+              ) : (
+                checkedFiles.length > 0 && (
+                  <Tooltip description="Geen bestanden geselecteerd die naar PNG kunnen worden geconverteerd">
+                    <Box>
+                      <LinkButton disabled size="M" variant="secondary">
+                        IMG - PNG
+                      </LinkButton>
+                    </Box>
+                  </Tooltip>
+                )
               )}
 
-              {hasConvertibleFilesForJPG() ? (
-                <LinkButton onClick={img2jpg} size="M" variant="default">
+              {/* JPG Convert Button */}
+              {utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) ? (
+                <LinkButton onClick={handleConvertJPG} size="M" variant="default" disabled={isLoading}>
                   IMG - JPG
                 </LinkButton>
-              ) : selectedFiles.length > 0 && (
-                <Tooltip description="Geen bestanden geselecteerd die naar JPG kunnen worden geconverteerd">
-                  <Box>
-                    <LinkButton disabled size="M" variant="secondary">
-                      IMG - JPG
-                    </LinkButton>
-                  </Box>
-                </Tooltip>
+              ) : (
+                checkedFiles.length > 0 && (
+                  <Tooltip description="Geen bestanden geselecteerd die naar JPG kunnen worden geconverteerd">
+                    <Box>
+                      <LinkButton disabled size="M" variant="secondary">
+                        IMG - JPG
+                      </LinkButton>
+                    </Box>
+                  </Tooltip>
+                )
               )}
+              {isLoading && <Loader small />} {/* Show loader next to buttons during conversion */}
             </FlexBox>
           </ContentBox>
         )}
+
+        {/* Files Table Section - Show only if files are loaded */}
         {files.length > 0 && (
           <ContentBox>
-            <Table colCount={files.length + 1}>
+            <Table colCount={5} rowCount={paginatedFiles.length}> {/* Use actual colCount and rowCount */}
               <Thead>
                 <Tr>
-                  <Th style={{ pointerEvents: 'auto' }}>
+                  <Th> {/* Checkbox column */}
                     <Checkbox
-                      aria-label="Select all entries"
+                      aria-label="Select all entries on current page"
                       checked={areAllSelected}
-                      indeterminate={selectedFiles.length > 0 && !areAllSelected}
+                      indeterminate={checkedFiles.length > 0 && !areAllSelected}
                       onCheckedChange={handleSelectAll}
                     />
                   </Th>
-                  <Th>
-                    <Typography variant="sigma">PREVIEW</Typography>
-                  </Th>
-                  <Th>
-                    <Typography variant="sigma">ID</Typography>
-                  </Th>
-                  <Th>
-                    <Typography variant="sigma">URL</Typography>
-                  </Th>
-                  <Th>
-                    <Typography variant="sigma">TYPE</Typography>
-                  </Th>
+                  <Th><Typography variant="sigma">PREVIEW</Typography></Th>
+                  <Th><Typography variant="sigma">ID</Typography></Th>
+                  <Th><Typography variant="sigma">NAME</Typography></Th> {/* Changed URL to NAME as per column content */}
+                  <Th><Typography variant="sigma">TYPE</Typography></Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {paginatedFiles.map((file) => {
                   const conversionResult = getConversionResult(file.id);
                   const isConverted = isFileConverted(file.id);
+                  // Get the full file details from the 'files' state if needed,
+                  // but `paginatedFiles` should already contain enough info.
+                  // Assuming `file` in `paginatedFiles` is a complete file object.
 
                   return (
                     <Tr key={file.id}>
-                      <Td style={{ pointerEvents: 'auto' }}>
+                      <Td>
                         <Checkbox
-                          aria-label={`Select file ${file.name}`}
+                          aria-label={`Select file ${file.name || file.id}`}
                           checked={isFileSelected(file)}
                           onCheckedChange={handleCheckboxChange(file)}
                         />
@@ -682,8 +953,9 @@ useEffect(() => {
                       <Td>
                         <Box padding={1} style={{ width: '50px', height: '50px' }}>
                           {file.url ? (
+                            // Add a timestamp to the URL to bust browser cache and show the new version after conversion
                             <img
-                              src={`${file.url}?t=${Date.now()}`} // Voorkom caching door timestamp toe te voegen
+                              src={`${file.url}?t=${Date.now()}`}
                               alt={`Preview of ${file.name || file.id}`}
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
@@ -699,13 +971,18 @@ useEffect(() => {
                         <Typography textColor="neutral800">{file.name || 'N/A'}</Typography>
                       </Td>
                       <Td>
+                        {/* Display new type if converted, otherwise show original type */}
                         {isConverted ? (
                           <Box>
-                            <StrikethroughText>{conversionResult.name.split('.').pop().toUpperCase()}</StrikethroughText>
-                            <NewTypeText>{file.type}</NewTypeText>
+                            {/* Assuming the conversionResult includes the original name or type to show strikethrough */}
+                            {/* The original code used conversionResult.name, implying results might have original name.
+                                 Let's assume file.ext or file.type gives the original extension.
+                             */}
+                            <StrikethroughText>{file.ext?.toUpperCase() || 'UNKNOWN'}</StrikethroughText> {/* Use original file extension/type */}
+                            <NewTypeText>{file.type?.toUpperCase() || 'UNKNOWN'}</NewTypeText> {/* Use file.type for the potentially new type */}
                           </Box>
                         ) : (
-                          <Typography textColor="neutral800">{file.type || 'N/A'}</Typography>
+                          <Typography textColor="neutral800">{file.type?.toUpperCase() || 'N/A'}</Typography>
                         )}
                       </Td>
                     </Tr>
@@ -713,13 +990,14 @@ useEffect(() => {
                 })}
               </Tbody>
             </Table>
+
+            {/* Pagination */}
             {pageCount > 1 && (
-              <Nav
-                pageCount={pageCount}
-                currentPage={page}
-                onPageChange={setPage}
-              >
-                <PreviousLink onClick={() => setPage(prev => prev - 1)}>Vorige</PreviousLink>
+              <Nav pageCount={pageCount} currentPage={page} onPageChange={setPage}>
+                <PreviousLink onClick={() => setPage(prev => Math.max(1, prev - 1))}>
+                  {formatMessage({ id: getTranslation('pagination.previous'), defaultMessage: 'Previous' })}
+                </PreviousLink>
+
                 {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNumber => (
                   <PageLink
                     key={pageNumber}
@@ -730,11 +1008,25 @@ useEffect(() => {
                     {pageNumber}
                   </PageLink>
                 ))}
-                <NextLink onClick={() => setPage(prev => prev + 1)}>Volgende</NextLink>
+
+                <NextLink onClick={() => setPage(prev => Math.min(pageCount, prev + 1))}>
+                  {formatMessage({ id: getTranslation('pagination.next'), defaultMessage: 'Next' })}
+                </NextLink>
               </Nav>
             )}
           </ContentBox>
         )}
+
+        {/* Message when no files are loaded */}
+        {!isLoading && files.length === 0 && (
+          <ContentBox>
+            <Typography variant="beta" textColor="neutral600">
+              {formatMessage({ id: getTranslation('homepage.nofiles'), defaultMessage: 'No files loaded yet. Click "Fetch Image Files" to begin.' })}
+            </Typography>
+          </ContentBox>
+        )}
+
+
       </Box>
     </MainBox>
   );

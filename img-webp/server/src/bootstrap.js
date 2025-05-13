@@ -8,8 +8,8 @@ const sharp = require('sharp');
 module.exports = ({ strapi }) => {
   // Nu kun je veilig toegang krijgen tot de plugin omdat die volledig geregistreerd is
   try {
-    // HIER kun je wel veilig strapi.plugin gebruiken
-    console.log('[IMG-WEBP] Bootstrap: MediaEvents beschikbaar gemaakt via plugin API');
+    // // HIER kun je wel veilig strapi.plugin gebruiken
+    // console.log('[IMG-WEBP] Bootstrap: MediaEvents beschikbaar gemaakt via plugin API');
 
     // Upload lifecycles
     strapi.db.lifecycles.subscribe({
@@ -79,7 +79,7 @@ module.exports = ({ strapi }) => {
             // Verwijder het originele bestand (optioneel)
             fs.unlinkSync(originalPath);
 
-            console.log(`[IMG-WEBP] Bestand geconverteerd: ${fileData.name} -> ${webpName}`);
+            // console.log(`[IMG-WEBP] Bestand geconverteerd: ${fileData.name} -> ${webpName}`);
           } catch (error) {
             console.error(`[IMG-WEBP] Fout bij conversie: ${error.message}`);
           }
