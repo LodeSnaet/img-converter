@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/strapi-img-webp.iml" filepath="$PROJECT_DIR$/.idea/strapi-img-webp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/img-webp.iml" filepath="$PROJECT_DIR$/.idea/img-webp.iml" />
     </modules>
   </component>
 </project>
