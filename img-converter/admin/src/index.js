@@ -17,7 +17,7 @@ export default {
           id: `${PLUGIN_ID}-link`,
           intlLabel: {
             id: `${PLUGIN_ID}.plugin.name`,
-            defaultMessage: 'Img-Webp',
+            defaultMessage: 'Img-Web',
           },
           to: `/settings/${PLUGIN_ID}`,          // ← this must match
           Component: async () => import('./pages/App'),
