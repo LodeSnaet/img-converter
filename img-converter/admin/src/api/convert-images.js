@@ -1,4 +1,5 @@
 import fetchImages from './fetch-images';
+import { PLUGIN_ID } from '../pluginId';
 
 const convertImages = {
   img2webp: async () => {
@@ -13,9 +14,7 @@ const convertImages = {
         return { totalConverted: 0, results: [], message: 'No files selected for conversion.', skipped: true };
       }
 
-      const backendEndpoint = '/img-webp/convert-to-webp';
-
-      const response = await fetch(backendEndpoint, {
+      const response = await fetch(`/${PLUGIN_ID}/convert-to-webp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,9 +48,7 @@ const convertImages = {
         return { totalConverted: 0, results: [], message: 'No files selected for conversion.', skipped: true };
       }
 
-      const backendEndpoint = '/img-webp/convert-to-png';
-
-      const response = await fetch(backendEndpoint, {
+      const response = await fetch(`/${PLUGIN_ID}/convert-to-png`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,9 +82,7 @@ const convertImages = {
         return { totalConverted: 0, results: [], message: 'No files selected for conversion.', skipped: true };
       }
 
-      const backendEndpoint = '/img-webp/convert-to-jpg';
-
-      const response = await fetch(backendEndpoint, {
+      const response = await fetch(`/${PLUGIN_ID}/convert-to-jpg`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -58,7 +58,7 @@
     "displayName": "img-webp",
     "description": "This plugin will automatically convert all images (not SVGs) into WEBPs."
   },
-  "name": "img-webp",
+  "name": "img-converter",
   "description": "This plugin will automatically convert all images (not SVGs) into WEBPs.",
   "license": "MIT",
   "repository": {

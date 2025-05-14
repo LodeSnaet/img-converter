@@ -1,8 +1,9 @@
-// admin/src/api/selected-files.js
+import { PLUGIN_ID } from '../pluginId';
+
 const selectedFiles = {
   setSelectedFiles: async (files) => {
     try {
-      const response = await fetch('/img-webp/selected-files', {
+      const response = await fetch(`/${PLUGIN_ID}/selected-files`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,9 +1,10 @@
 import utilsImages from './utils-images';
+import { PLUGIN_ID } from '../pluginId';
 
 const fetchImages = {
  fetchFiles: async () => {
     try {
-      const response = await fetch(`/img-webp/files`); // Use your actual plugin ID and route path
+      const response = await fetch(`/${PLUGIN_ID}/files`); // Use your actual plugin ID and route path
 
       if (!response.ok) {
         // Handle non-200 responses, maybe throw an error
@@ -28,7 +29,7 @@ const fetchImages = {
 
         return { data: images };
       } else {
-        console.error('Unexpected response structure from /img-webp/files:', data);
+        console.error(`Unexpected response structure from /${PLUGIN_ID}/files:`, data);
         return { data: [] };
       }
 
@@ -39,7 +40,7 @@ const fetchImages = {
   },
  fetchSelectedFiles: async () => {
     try {
-      const response = await fetch('/img-webp/selected-files', {
+      const response = await fetch(`/${PLUGIN_ID}/selected-files`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json', // Still good practice

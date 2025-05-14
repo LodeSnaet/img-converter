@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const { PLUGIN_ID } = require('../../admin/src/pluginId');
 
 module.exports = ({ strapi }) => {
   // Nu kun je veilig toegang krijgen tot de plugin omdat die volledig geregistreerd is
@@ -19,7 +20,7 @@ module.exports = ({ strapi }) => {
         const storedValue = await strapi
           .store({
             type: 'plugin',
-            name: 'img-webp',
+            name: PLUGIN_ID,
             key: 'autoConvertEnabled',
           })
           .get();

@@ -1,0 +1,1653 @@
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+
+// dist/_chunks/App-Cv0ULIaF.js
+var require_App_Cv0ULIaF = __commonJS({
+  "dist/_chunks/App-Cv0ULIaF.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, Symbol.toStringTag, { value: "Module" });
+    var jsxRuntime = require("react/jsx-runtime");
+    var designSystem = require("@strapi/design-system");
+    var react = require("react");
+    var styled = require("styled-components");
+    var reactIntl = require("react-intl");
+    var index = require_index_sJVuUVHP();
+    var _interopDefault = (e) => e && e.__esModule ? e : { default: e };
+    var styled__default = /* @__PURE__ */ _interopDefault(styled);
+    var getTranslation = (id) => `${index.PLUGIN_ID}.${id}`;
+    var utilsImages = {
+      hasConvertibleFilesForWEBP: (checkedFiles, files) => {
+        if (checkedFiles.length === 0)
+          return false;
+        return checkedFiles.some((selectedFile) => {
+          const fullFile = files.find((f) => f.id === selectedFile.id);
+          if (!fullFile || !fullFile.mime)
+            return false;
+          return fullFile.mime.startsWith("image/") && fullFile.mime !== "image/webp" && fullFile.mime !== "image/svg+xml";
+        });
+      },
+      hasConvertibleFilesForPNG: (checkedFiles, files) => {
+        if (checkedFiles.length === 0)
+          return false;
+        return checkedFiles.some((selectedFile) => {
+          const fullFile = files.find((f) => f.id === selectedFile.id);
+          if (!fullFile || !fullFile.mime)
+            return false;
+          return fullFile.mime.startsWith("image/") && fullFile.mime !== "image/png" && fullFile.mime !== "image/svg+xml";
+        });
+      },
+      hasConvertibleFilesForJPG: (checkedFiles, files) => {
+        if (checkedFiles.length === 0)
+          return false;
+        return checkedFiles.some((selectedFile) => {
+          const fullFile = files.find((f) => f.id === selectedFile.id);
+          if (!fullFile || !fullFile.mime)
+            return false;
+          return fullFile.mime === "image/png" || fullFile.mime === "image/webp";
+        });
+      },
+      determineFileType: (mime) => {
+        try {
+          const excludeTypes = ["image/svg+xml", "video/mp4", "image/gif", "application/pdf"];
+          if (excludeTypes.includes(mime)) {
+            return null;
+          }
+          switch (mime) {
+            case "image/png":
+              return "PNG";
+            case "image/jpg":
+              return "JPG";
+            case "image/jpeg":
+              return "JPG";
+            case "image/webp":
+              return "WEBP";
+            default:
+              return "OTHER";
+          }
+        } catch (err) {
+          console.log(500, "Fout bij detecteren bestandsformaat");
+        }
+      }
+    };
+    var fetchImages = {
+      fetchFiles: async () => {
+        try {
+          const response = await fetch(`/${index.PLUGIN_ID}/files`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData?.message || response.statusText}`);
+          }
+          const data = await response.json();
+          console.log("Fetched raw data from backend: ", data);
+          if (data && Array.isArray(data.data)) {
+            const images = data.data.map((file) => ({
+              id: file.id,
+              name: file.name || file.fileName,
+              // Use fileName as fallback
+              url: file.url,
+              mime: file.mime,
+              type: utilsImages.determineFileType(file.mime)
+            })).filter((file) => file.type !== "N/A");
+            return { data: images };
+          } else {
+            console.error(`Unexpected response structure from /${index.PLUGIN_ID}/files:`, data);
+            return { data: [] };
+          }
+        } catch (err) {
+          console.error("Error fetching files:", err);
+          return { data: [] };
+        }
+      },
+      fetchSelectedFiles: async () => {
+        try {
+          const response = await fetch(`/${index.PLUGIN_ID}/selected-files`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json"
+              // Still good practice
+            }
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
+            const errorMessage = `Failed to fetch selected files: ${response.status} ${errorData.message || response.statusText}`;
+            console.error(errorMessage, errorData);
+            throw new Error(errorMessage);
+          }
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          console.error("Error in fetchSelectedFiles:", error);
+          throw error;
+        }
+      }
+    };
+    var convertImages = {
+      img2webp: async () => {
+        try {
+          const selectedData = await fetchImages.fetchSelectedFiles();
+          const filesToConvert = selectedData.files;
+          if (!filesToConvert || filesToConvert.length === 0) {
+            return { totalConverted: 0, results: [], message: "No files selected for conversion.", skipped: true };
+          }
+          const response = await fetch(`/${index.PLUGIN_ID}/convert-to-webp`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ files: filesToConvert })
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
+            const errorMessage = `Backend conversion API returned an error (${response.status}): ${errorData.message || response.statusText}`;
+            console.error(errorMessage, errorData);
+            throw new Error(errorMessage);
+          }
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          console.error("Error during WebP conversion API call:", error);
+          throw error;
+        }
+      },
+      img2png: async () => {
+        try {
+          const selectedData = await fetchImages.fetchSelectedFiles();
+          const filesToConvert = selectedData.files;
+          if (!filesToConvert || filesToConvert.length === 0) {
+            return { totalConverted: 0, results: [], message: "No files selected for conversion.", skipped: true };
+          }
+          const response = await fetch(`/${index.PLUGIN_ID}/convert-to-png`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ files: filesToConvert })
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
+            const errorMessage = `Backend conversion API returned an error (${response.status}): ${errorData.message || response.statusText}`;
+            console.error(errorMessage, errorData);
+            throw new Error(errorMessage);
+          }
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          console.error("Error during PNG conversion API call:", error);
+          throw error;
+        }
+      },
+      img2jpg: async () => {
+        try {
+          const selectedData = await fetchImages.fetchSelectedFiles();
+          const filesToConvert = selectedData.files;
+          if (!filesToConvert || filesToConvert.length === 0) {
+            return { totalConverted: 0, results: [], message: "No files selected for conversion.", skipped: true };
+          }
+          const response = await fetch(`/${index.PLUGIN_ID}/convert-to-jpg`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ files: filesToConvert })
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
+            const errorMessage = `Backend conversion API returned an error (${response.status}): ${errorData.message || response.statusText}`;
+            console.error(errorMessage, errorData);
+            throw new Error(errorMessage);
+          }
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          console.error("Error during JPG conversion API call:", error);
+          throw error;
+        }
+      }
+    };
+    var autoConvertImages = {
+      toggle: async (enabled) => {
+        try {
+          const response = await fetch("/img-webp/set-auto-convert", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled })
+          });
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          console.error("Error updating auto-convert settings:", error);
+          throw error;
+        }
+      },
+      getStatus: async () => {
+        try {
+          const response = await fetch("/img-webp/get-auto-convert");
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          return data.enabled;
+        } catch (error) {
+          console.error("Error fetching auto-convert settings:", error);
+          return false;
+        }
+      }
+    };
+    var selectedFiles = {
+      setSelectedFiles: async (files) => {
+        try {
+          const response = await fetch(`/${index.PLUGIN_ID}/selected-files`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ files })
+            // Veranderd van fileIds naar { files: fileIds }
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return await response.json();
+        } catch (error) {
+          console.error("Fout bij opslaan van geselecteerde bestanden:", error);
+          throw error;
+        }
+      }
+    };
+    var StrikethroughText = styled__default.default(designSystem.Typography)`
+  text-decoration: line-through;
+  color: #d02b20;
+  font-size: 0.8rem;
+`;
+    var NewTypeText = styled__default.default(designSystem.Typography)`
+  color: #5cb176;
+  font-weight: bold;
+  margin-left: 4px;
+`;
+    var PaddedBox = styled__default.default(designSystem.Box)`
+  display: flex;
+  flex-direction: column;
+  padding-block-start: 40px;
+  padding-block-end: 40px;
+`;
+    var Nav = styled__default.default(designSystem.Pagination)`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+`;
+    var ContentBox = styled__default.default(designSystem.Box)`
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 16px;
+  border-radius: 4px;
+  background-color: #fff;
+  padding-block: 24px;
+  padding-inline: 32px;
+`;
+    var FlexBox = styled__default.default(designSystem.Box)`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+`;
+    var MainBox = styled__default.default(designSystem.Main)`
+  padding-inline-start: 56px;
+  padding-inline-end: 56px;
+`;
+    var DescriptionTypography = styled__default.default(designSystem.Typography)`
+  margin-block-start: ${({ theme }) => theme.spaces.s1};
+`;
+    var NotificationContainer = styled__default.default(designSystem.Box)`
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 500px;
+  max-width: 90vw;
+  animation: slideDown 0.3s ease-out;
+
+  @keyframes slideDown {
+    0% {
+      transform: translate(-50%, -20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+  }
+`;
+    var StyledPageLink = styled__default.default(designSystem.PageLink)`
+  ${({ active, theme }) => active && `
+    border: 1px solid ${theme.colors.primary600}; // Use Strapi's primary blue color
+    border-radius: 5px;
+  `}
+`;
+    function PluginSection() {
+      const { formatMessage } = reactIntl.useIntl();
+      const PAGE_SIZE = 7;
+      const [files, setFiles] = react.useState([]);
+      const [page, setPage] = react.useState(1);
+      const [conversionResults, setConversionResults] = react.useState([]);
+      const [showAlert, setShowAlert] = react.useState(false);
+      const [alertInfo, setAlertInfo] = react.useState({ type: "success", message: "" });
+      const [autoConvert, setAutoConvert] = react.useState(false);
+      const [checkedFiles, setCheckedFiles] = react.useState([]);
+      const [isLoading, setIsLoading] = react.useState(false);
+      const startIndex = (page - 1) * PAGE_SIZE;
+      const endIndex = startIndex + PAGE_SIZE;
+      const paginatedFiles = files.slice(startIndex, endIndex);
+      const pageCount = Math.ceil(files.length / PAGE_SIZE);
+      const areAllSelected = paginatedFiles.length > 0 && paginatedFiles.every((file) => checkedFiles.some((f) => f.id === file.id));
+      react.useEffect(() => {
+        const getSettings = async () => {
+          try {
+            const enabled = await autoConvertImages.getStatus();
+            setAutoConvert(enabled);
+          } catch (error) {
+            console.error("Failed to fetch auto-convert settings:", error);
+            showNotification("danger", "Fout bij het laden van instellingen.");
+          }
+        };
+        getSettings();
+      }, []);
+      const showNotification = react.useCallback((type, message) => {
+        setAlertInfo({ type, message });
+        setShowAlert(true);
+        const timer = setTimeout(() => setShowAlert(false), 5e3);
+        return () => clearTimeout(timer);
+      }, []);
+      const handleFetchImages = async (e) => {
+        e?.preventDefault();
+        setIsLoading(true);
+        try {
+          const response = await fetchImages.fetchFiles();
+          setFiles(response.data);
+          setPage(1);
+          setCheckedFiles([]);
+          await selectedFiles.setSelectedFiles([]);
+          setConversionResults([]);
+          showNotification("success", "Bestanden opgehaald.");
+        } catch (error) {
+          console.error("Error fetching files:", error);
+          showNotification("danger", `Fout bij het ophalen van bestanden: ${error.message}`);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      const handleCheckboxChange = react.useCallback((file) => {
+        return async () => {
+          const isSelected = checkedFiles.some((f) => f.id === file.id);
+          const newCheckedFiles = isSelected ? checkedFiles.filter((f) => f.id !== file.id) : [...checkedFiles, file];
+          setCheckedFiles(newCheckedFiles);
+          try {
+            await selectedFiles.setSelectedFiles(newCheckedFiles);
+          } catch (error) {
+            showNotification(
+              "danger",
+              `Fout bij het bijwerken van de selectie op de backend: ${error.message}`
+            );
+            setCheckedFiles(checkedFiles);
+          }
+        };
+      }, [checkedFiles, showNotification, selectedFiles]);
+      const handleSelectAll = async () => {
+        const newCheckedFiles = areAllSelected ? checkedFiles.filter((file) => !paginatedFiles.some((pf) => pf.id === file.id)) : [...checkedFiles.filter((file) => !paginatedFiles.some((pf) => pf.id === file.id)), ...paginatedFiles];
+        setCheckedFiles(newCheckedFiles);
+        try {
+          await selectedFiles.setSelectedFiles(newCheckedFiles);
+        } catch (error) {
+          showNotification(
+            "danger",
+            `Fout bij het bijwerken van de selectie op de backend: ${error.message}`
+          );
+          setCheckedFiles(checkedFiles);
+        }
+      };
+      const handleToggleChange = async () => {
+        const newState = !autoConvert;
+        setAutoConvert(newState);
+        try {
+          await autoConvertImages.toggle(newState);
+          showNotification(
+            "success",
+            `Automatisch converteren naar WebP is ${newState ? "ingeschakeld" : "uitgeschakeld"}.`
+          );
+        } catch (error) {
+          setAutoConvert(!newState);
+          showNotification(
+            "danger",
+            `Fout bij het bijwerken van instellingen: ${error.message}`
+          );
+        }
+      };
+      const handleConvert = react.useCallback(async (converterFunction, conversionType) => {
+        setIsLoading(true);
+        setConversionResults([]);
+        try {
+          showNotification("info", `Starten met converteren naar ${conversionType}...`);
+          const result = await converterFunction();
+          if (result.skipped) {
+            showNotification("warning", result.message || `Geen bestanden geselecteerd voor conversie naar ${conversionType}.`);
+          } else {
+            setConversionResults(result.results);
+            setCheckedFiles([]);
+            await selectedFiles.setSelectedFiles([]);
+            if (result.totalConverted > 0) {
+              showNotification("success", `${result.totalConverted} bestanden succesvol geconverteerd naar ${conversionType}.`);
+              setTimeout(handleFetchImages, 1e3);
+            } else if (result.results && result.results.length > 0) {
+              showNotification("warning", `Geen bestanden konden worden geconverteerd naar ${conversionType}.`);
+            } else {
+              showNotification("warning", `Conversie naar ${conversionType} voltoooid, maar met onverwacht resultaat.`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error during ${conversionType} conversion:`, error);
+          showNotification("danger", `Conversie naar ${conversionType} mislukt: ${error.message || "Onbekende fout."}`);
+        } finally {
+          setIsLoading(false);
+        }
+      }, [showNotification, selectedFiles, handleFetchImages]);
+      const handleConvertWebP = react.useCallback(() => handleConvert(convertImages.img2webp, "WebP"), [handleConvert]);
+      const handleConvertPNG = react.useCallback(() => handleConvert(convertImages.img2png, "PNG"), [handleConvert]);
+      const handleConvertJPG = react.useCallback(() => handleConvert(convertImages.img2jpg, "JPG"), [handleConvert]);
+      const isFileSelected = (file) => checkedFiles.some((f) => f.id === file.id);
+      const isFileConverted = (fileId) => conversionResults.some((r) => r.id === fileId && r.success);
+      const getConversionResult = (fileId) => conversionResults.find((r) => r.id === fileId);
+      return /* @__PURE__ */ jsxRuntime.jsxs(MainBox, { children: [
+        showAlert && /* @__PURE__ */ jsxRuntime.jsx(NotificationContainer, { children: /* @__PURE__ */ jsxRuntime.jsx(
+          designSystem.Alert,
+          {
+            closeLabel: "Sluiten",
+            title: alertInfo.type === "success" ? "Gelukt!" : alertInfo.type === "warning" ? "Let op!" : alertInfo.type === "info" ? "Informatie" : "Fout",
+            variant: alertInfo.type,
+            onClose: () => setShowAlert(false),
+            children: alertInfo.message
+          }
+        ) }),
+        /* @__PURE__ */ jsxRuntime.jsxs(PaddedBox, { children: [
+          /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "alpha", children: formatMessage({
+            id: getTranslation("homepage.title"),
+            defaultMessage: "Img-Webp Plugin"
+          }) }),
+          /* @__PURE__ */ jsxRuntime.jsx(DescriptionTypography, { variant: "omega", textColor: "neutral600", children: formatMessage({
+            id: getTranslation("homepage.description"),
+            defaultMessage: "Convert and optimize images to WebP format during media upload."
+          }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Box, { style: { display: "flex", flexDirection: "column", gap: "16px", alignItems: "start" }, children: [
+          /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Box, { style: { display: "flex", flexDirection: "row", justifyContent: "space-around", gap: "16px" }, children: [
+            /* @__PURE__ */ jsxRuntime.jsxs(ContentBox, { children: [
+              /* @__PURE__ */ jsxRuntime.jsxs(PaddedBox, { style: { paddingBlock: "0px" }, children: [
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "beta", children: formatMessage({
+                  id: getTranslation("buttonpage.description"),
+                  defaultMessage: "Convert and optimize images to WebP format during media upload."
+                }) }),
+                files.length > 0 && checkedFiles.length === 0 && // This text will only show if files are loaded but none are checked
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "epsilon", textColor: "neutral600", style: { marginBottom: "8px" }, children: "Please select an image before you can start an action" })
+              ] }),
+              /* @__PURE__ */ jsxRuntime.jsxs(FlexBox, { style: { alignItems: "center", gap: "8px" }, children: [
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { onClick: handleFetchImages, size: "M", variant: "default", disabled: isLoading, children: "Fetch Image Files" }),
+                isLoading && /* @__PURE__ */ jsxRuntime.jsx(designSystem.Loader, { small: true })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntime.jsxs(ContentBox, { children: [
+              /* @__PURE__ */ jsxRuntime.jsx(PaddedBox, { style: { paddingBlock: "0px" }, children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "beta", children: formatMessage({
+                id: getTranslation("autoconvert.description"),
+                defaultMessage: "Turn on auto convert to WebP?"
+              }) }) }),
+              /* @__PURE__ */ jsxRuntime.jsx(
+                designSystem.Toggle,
+                {
+                  label: "Auto convert to WebP",
+                  hint: "When checked images get converted to WebP's automatically when uploaded.",
+                  name: "autoConvertToggle",
+                  onLabel: "Yes",
+                  offLabel: "No",
+                  checked: autoConvert,
+                  onChange: handleToggleChange,
+                  disabled: isLoading
+                }
+              )
+            ] })
+          ] }),
+          files.length > 0 && checkedFiles.length > 0 && /* @__PURE__ */ jsxRuntime.jsxs(ContentBox, { children: [
+            /* @__PURE__ */ jsxRuntime.jsxs(PaddedBox, { style: { paddingBlock: "0px" }, children: [
+              /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "beta", children: formatMessage({
+                id: getTranslation("convertpage.description"),
+                defaultMessage: "Select action you want to complete"
+              }) }),
+              /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Typography, { variant: "epsilon", textColor: "neutral600", style: { marginBottom: "8px" }, children: [
+                checkedFiles.length,
+                " ",
+                checkedFiles.length === 1 ? "bestand" : "bestanden",
+                " geselecteerd"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntime.jsx(designSystem.Box, { children: !utilsImages.hasConvertibleFilesForWEBP(checkedFiles, files) && !utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) && !utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) && /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "pi", textColor: "danger600", children: "Geen van de geselecteerde bestanden kan worden geconverteerd naar de geselecteerde typen." }) }),
+            /* @__PURE__ */ jsxRuntime.jsxs(FlexBox, { style: { alignItems: "center", gap: "16px" }, children: [
+              utilsImages.hasConvertibleFilesForWEBP(checkedFiles, files) ? /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { onClick: handleConvertWebP, size: "M", variant: "default", disabled: isLoading, children: "IMG - WEBP" }) : (
+                // Button disabled if no convertible files for this type among selected ones
+                // Show disabled button only if *some* files are selected, otherwise the whole section is hidden
+                checkedFiles.length > 0 && /* @__PURE__ */ jsxRuntime.jsx(designSystem.Tooltip, { description: "Geen bestanden geselecteerd die naar WebP kunnen worden geconverteerd", children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Box, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { disabled: true, size: "M", variant: "secondary", children: "IMG - WEBP" }) }) })
+              ),
+              utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) ? /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { onClick: handleConvertPNG, size: "M", variant: "default", disabled: isLoading, children: "IMG - PNG" }) : checkedFiles.length > 0 && /* @__PURE__ */ jsxRuntime.jsx(designSystem.Tooltip, { description: "Geen bestanden geselecteerd die naar PNG kunnen worden geconverteerd", children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Box, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { disabled: true, size: "M", variant: "secondary", children: "IMG - PNG" }) }) }),
+              utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) ? /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { onClick: handleConvertJPG, size: "M", variant: "default", disabled: isLoading, children: "IMG - JPG" }) : checkedFiles.length > 0 && /* @__PURE__ */ jsxRuntime.jsx(designSystem.Tooltip, { description: "Geen bestanden geselecteerd die naar JPG kunnen worden geconverteerd", children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Box, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.LinkButton, { disabled: true, size: "M", variant: "secondary", children: "IMG - JPG" }) }) }),
+              isLoading && /* @__PURE__ */ jsxRuntime.jsx(designSystem.Loader, { small: true }),
+              " "
+            ] })
+          ] }),
+          files.length > 0 && /* @__PURE__ */ jsxRuntime.jsxs(ContentBox, { children: [
+            /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Table, { colCount: 5, rowCount: paginatedFiles.length, children: [
+              " ",
+              /* @__PURE__ */ jsxRuntime.jsx(designSystem.Thead, { children: /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Tr, { children: [
+                /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Th, { children: [
+                  " ",
+                  /* @__PURE__ */ jsxRuntime.jsx(
+                    designSystem.Checkbox,
+                    {
+                      "aria-label": "Select all entries on current page",
+                      checked: areAllSelected,
+                      indeterminate: checkedFiles.length > 0 && !areAllSelected,
+                      onCheckedChange: handleSelectAll
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.Th, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "sigma", children: "PREVIEW" }) }),
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.Th, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "sigma", children: "ID" }) }),
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.Th, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "sigma", children: "NAME" }) }),
+                " ",
+                /* @__PURE__ */ jsxRuntime.jsx(designSystem.Th, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "sigma", children: "TYPE" }) })
+              ] }) }),
+              /* @__PURE__ */ jsxRuntime.jsx(designSystem.Tbody, { children: paginatedFiles.map((file) => {
+                const conversionResult = getConversionResult(file.id);
+                const isConverted = isFileConverted(file.id);
+                console.log(`Result for file ${file.id}:`, file);
+                return /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Tr, { children: [
+                  /* @__PURE__ */ jsxRuntime.jsx(designSystem.Td, { children: /* @__PURE__ */ jsxRuntime.jsx(
+                    designSystem.Checkbox,
+                    {
+                      "aria-label": `Select file ${file.name || file.id}`,
+                      checked: isFileSelected(file),
+                      onCheckedChange: handleCheckboxChange(file)
+                    }
+                  ) }),
+                  /* @__PURE__ */ jsxRuntime.jsx(designSystem.Td, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Box, { padding: 1, style: { width: "50px", height: "50px" }, children: file.url ? (
+                    // Add a timestamp to the URL to bust browser cache and show the new version after conversion
+                    /* @__PURE__ */ jsxRuntime.jsx(
+                      "img",
+                      {
+                        src: `${file.url}?t=${Date.now()}`,
+                        alt: `Preview of ${file.name || file.id}`,
+                        style: { width: "100%", height: "100%", objectFit: "cover" }
+                      }
+                    )
+                  ) : /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "omega", children: "No preview" }) }) }),
+                  /* @__PURE__ */ jsxRuntime.jsx(designSystem.Td, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { textColor: "neutral800", children: file.id }) }),
+                  /* @__PURE__ */ jsxRuntime.jsx(designSystem.Td, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { textColor: "neutral800", children: file.name || "N/A" }) }),
+                  /* @__PURE__ */ jsxRuntime.jsx(designSystem.Td, { children: isConverted ? /* @__PURE__ */ jsxRuntime.jsxs(designSystem.Box, { children: [
+                    /* @__PURE__ */ jsxRuntime.jsx(StrikethroughText, { children: conversionResult.type }),
+                    /* @__PURE__ */ jsxRuntime.jsx(NewTypeText, { children: conversionResult.newType })
+                  ] }) : /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { textColor: "neutral800", children: file.type || "N/A" }) })
+                ] }, file.id);
+              }) })
+            ] }),
+            pageCount > 1 && /* @__PURE__ */ jsxRuntime.jsxs(Nav, { pageCount, currentPage: page, onPageChange: setPage, children: [
+              /* @__PURE__ */ jsxRuntime.jsx(designSystem.PreviousLink, { onClick: () => setPage((prev) => Math.max(1, prev - 1)), children: formatMessage({ id: getTranslation("pagination.previous"), defaultMessage: "Previous" }) }),
+              Array.from({ length: pageCount }, (_, i) => i + 1).map((pageNumber) => /* @__PURE__ */ jsxRuntime.jsx(
+                StyledPageLink,
+                {
+                  number: pageNumber,
+                  onClick: () => setPage(pageNumber),
+                  active: pageNumber === page,
+                  "aria-current": pageNumber === page ? "page" : void 0,
+                  children: pageNumber
+                },
+                pageNumber
+              )),
+              /* @__PURE__ */ jsxRuntime.jsx(designSystem.NextLink, { onClick: () => setPage((prev) => Math.min(pageCount, prev + 1)), children: formatMessage({ id: getTranslation("pagination.next"), defaultMessage: "Next" }) })
+            ] })
+          ] }),
+          !isLoading && files.length === 0 && /* @__PURE__ */ jsxRuntime.jsx(ContentBox, { children: /* @__PURE__ */ jsxRuntime.jsx(designSystem.Typography, { variant: "beta", textColor: "neutral600", children: formatMessage({ id: getTranslation("homepage.nofiles"), defaultMessage: 'No files loaded yet. Click "Fetch Image Files" to begin.' }) }) })
+        ] })
+      ] });
+    }
+    var App = () => {
+      return /* @__PURE__ */ jsxRuntime.jsx(designSystem.DesignSystemProvider, { locale: "en-GB", theme: designSystem.lightTheme, children: /* @__PURE__ */ jsxRuntime.jsx(PluginSection, {}) });
+    };
+    exports2.default = App;
+  }
+});
+
+// dist/_chunks/en-D-oOJaYA.js
+var require_en_D_oOJaYA = __commonJS({
+  "dist/_chunks/en-D-oOJaYA.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, Symbol.toStringTag, { value: "Module" });
+    var en = {
+      "img-converter.plugin.settings.section.label": "Image to WEBP",
+      "img-converter.plugin.name": "Image to WEBP",
+      "img-converter.homepage.title": "Image Converter Dashboard",
+      "img-converter.homepage.description": "Manage your image conversion settings here.",
+      "img-converter.buttonpage.description": "Fetch all the uploaded images in a list",
+      "img-converter.convertpage.description": "Select action you want to complete",
+      "img-converter.autoconvert.description": "Turn on auto convert to WebP?"
+    };
+    exports2.default = en;
+  }
+});
+
+// dist/_chunks/index-sJVuUVHP.js
+var require_index_sJVuUVHP = __commonJS({
+  "dist/_chunks/index-sJVuUVHP.js"(exports2) {
+    "use strict";
+    var react = require("react");
+    var __variableDynamicImportRuntimeHelper = (glob, path, segs) => {
+      const v = glob[path];
+      if (v) {
+        return typeof v === "function" ? v() : Promise.resolve(v);
+      }
+      return new Promise((_, reject) => {
+        (typeof queueMicrotask === "function" ? queueMicrotask : setTimeout)(
+          reject.bind(
+            null,
+            new Error(
+              "Unknown variable dynamic import: " + path + (path.split("/").length !== segs ? ". Note that variables only represent file names one level deep." : "")
+            )
+          )
+        );
+      });
+    };
+    var PLUGIN_ID = "img-converter";
+    var Initializer = ({ setPlugin }) => {
+      const ref = react.useRef(setPlugin);
+      react.useEffect(() => {
+        ref.current(PLUGIN_ID);
+      }, []);
+      return null;
+    };
+    var index = {
+      register(app) {
+        app.createSettingSection(
+          {
+            id: `${PLUGIN_ID}-section`,
+            intlLabel: {
+              id: `${PLUGIN_ID}.settings.section.label`,
+              defaultMessage: "IMG-WEBP"
+              // human‑readable fallback
+            }
+          },
+          [
+            {
+              id: `${PLUGIN_ID}-link`,
+              intlLabel: {
+                id: `${PLUGIN_ID}.plugin.name`,
+                defaultMessage: "Img-Webp"
+              },
+              to: `/settings/${PLUGIN_ID}`,
+              // ← this must match
+              Component: async () => Promise.resolve().then(() => require_App_Cv0ULIaF())
+            }
+          ]
+        );
+        app.registerPlugin({
+          id: PLUGIN_ID,
+          initializer: Initializer,
+          name: PLUGIN_ID
+        });
+      },
+      async registerTrads({ locales }) {
+        return Promise.all(
+          locales.map(async (locale) => {
+            try {
+              const { default: data } = await __variableDynamicImportRuntimeHelper(/* @__PURE__ */ Object.assign({ "./translations/en.json": () => Promise.resolve().then(() => require_en_D_oOJaYA()) }), `./translations/${locale}.json`, 3);
+              return { data, locale };
+            } catch {
+              return { data: {}, locale };
+            }
+          })
+        );
+      }
+    };
+    exports2.PLUGIN_ID = PLUGIN_ID;
+    exports2.index = index;
+  }
+});
+
+// dist/admin/index.js
+var require_admin = __commonJS({
+  "dist/admin/index.js"(exports2, module2) {
+    "use strict";
+    var index = require_index_sJVuUVHP();
+    module2.exports = index.index;
+  }
+});
+
+// dist/server/index.js
+var require_server = __commonJS({
+  "dist/server/index.js"(exports2, module2) {
+    "use strict";
+    var require$$0 = require("fs");
+    var require$$1 = require("path");
+    var require$$2 = require("sharp");
+    var _interopDefault = (e) => e && e.__esModule ? e : { default: e };
+    var require$$0__default = /* @__PURE__ */ _interopDefault(require$$0);
+    var require$$1__default = /* @__PURE__ */ _interopDefault(require$$1);
+    var require$$2__default = /* @__PURE__ */ _interopDefault(require$$2);
+    function getDefaultExportFromCjs(x) {
+      return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
+    }
+    function getAugmentedNamespace(n) {
+      if (n.__esModule)
+        return n;
+      var f = n.default;
+      if (typeof f == "function") {
+        var a = function a2() {
+          if (this instanceof a2) {
+            return Reflect.construct(f, arguments, this.constructor);
+          }
+          return f.apply(this, arguments);
+        };
+        a.prototype = f.prototype;
+      } else
+        a = {};
+      Object.defineProperty(a, "__esModule", { value: true });
+      Object.keys(n).forEach(function(k) {
+        var d = Object.getOwnPropertyDescriptor(n, k);
+        Object.defineProperty(a, k, d.get ? d : {
+          enumerable: true,
+          get: function() {
+            return n[k];
+          }
+        });
+      });
+      return a;
+    }
+    var PLUGIN_ID$1 = "img-converter";
+    var pluginId = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+      __proto__: null,
+      PLUGIN_ID: PLUGIN_ID$1
+    }, Symbol.toStringTag, { value: "Module" }));
+    var require$$3 = /* @__PURE__ */ getAugmentedNamespace(pluginId);
+    var fs$1 = require$$0__default.default;
+    var path$1 = require$$1__default.default;
+    var sharp$1 = require$$2__default.default;
+    var { PLUGIN_ID } = require$$3;
+    var bootstrap = ({ strapi }) => {
+      try {
+        strapi.db.lifecycles.subscribe({
+          models: ["plugin::upload.file"],
+          async afterCreate(event) {
+            const storedValue = await strapi.store({
+              type: "plugin",
+              name: PLUGIN_ID,
+              key: "autoConvertEnabled"
+            }).get();
+            if (storedValue === true) {
+              const fileData = event.result;
+              if (!fileData || !fileData.mime || !fileData.mime.startsWith("image/"))
+                return;
+              if (fileData.mime === "image/svg+xml" || fileData.mime === "image/webp")
+                return;
+              try {
+                const publicDir = strapi.dirs.static.public;
+                const originalUrl = fileData.url;
+                const originalPath = path$1.join(
+                  publicDir,
+                  originalUrl.startsWith("/") ? originalUrl.substring(1) : originalUrl
+                );
+                if (!fs$1.existsSync(originalPath)) {
+                  console.error(`[IMG-WEBP] Bestand niet gevonden: ${originalPath}`);
+                  return;
+                }
+                const originalExt = path$1.extname(originalPath);
+                const originalName = path$1.basename(originalPath, originalExt);
+                const originalDir = path$1.dirname(originalPath);
+                const webpName = originalName + ".webp";
+                const webpPath = path$1.join(originalDir, webpName);
+                const webpUrl = originalUrl.replace(originalExt, ".webp");
+                await sharp$1(originalPath).webp({
+                  quality: 85,
+                  lossless: false,
+                  effort: 4
+                }).toFile(webpPath);
+                const fileSize = fs$1.statSync(webpPath).size;
+                await strapi.entityService.update("plugin::upload.file", fileData.id, {
+                  data: {
+                    name: webpName,
+                    ext: ".webp",
+                    mime: "image/webp",
+                    url: webpUrl,
+                    size: fileSize
+                  }
+                });
+                fs$1.unlinkSync(originalPath);
+              } catch (error) {
+                console.error(`[IMG-WEBP] Fout bij conversie: ${error.message}`);
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error("[IMG-WEBP] Bootstrap error:", error);
+      }
+    };
+    var bootstrap$1 = /* @__PURE__ */ getDefaultExportFromCjs(bootstrap);
+    var destroy = ({ strapi }) => {
+    };
+    var register = ({ strapi }) => {
+    };
+    var register$1 = /* @__PURE__ */ getDefaultExportFromCjs(register);
+    var config = {
+      default: {},
+      validator() {
+      }
+    };
+    var contentTypes = {};
+    var convertUtils = {
+      shouldConvert: (currentMime, target) => {
+        console.log(`Server-side conversie check - MIME: ${currentMime}, Target: ${target}`);
+        if (!currentMime) {
+          console.log("Geen MIME type beschikbaar");
+          return false;
+        }
+        if (currentMime === "image/webp" && target === "webp" || currentMime === "image/png" && target === "png" || (currentMime === "image/jpeg" || currentMime === "image/jpg") && target === "jpg") {
+          console.log("Bestand is al in doelformaat");
+          return false;
+        }
+        const targetMap = {
+          webp: ["image/png", "image/jpeg", "image/jpg"],
+          png: ["image/jpeg", "image/jpg", "image/webp"],
+          jpg: ["image/png", "image/webp"]
+        };
+        const canConvert = targetMap[target]?.includes(currentMime);
+        console.log(`Kan converteren: ${canConvert}`);
+        return canConvert;
+      }
+    };
+    var convertUtils_1 = convertUtils;
+    var convertUtils$1 = /* @__PURE__ */ getDefaultExportFromCjs(convertUtils_1);
+    var fs = require("fs");
+    var path = require("path");
+    var sharp = require("sharp");
+    var selectedFiles = [];
+    var determineFileType = function(mime) {
+      try {
+        const excludeTypes = ["image/svg+xml", "video/mp4", "image/gif", "application/pdf"];
+        if (excludeTypes.includes(mime)) {
+          return null;
+        }
+        switch (mime) {
+          case "image/png":
+            return "PNG";
+          case "image/jpg":
+            return "JPG";
+          case "image/jpeg":
+            return "JPG";
+          case "image/webp":
+            return "WEBP";
+          default:
+            return "OTHER";
+        }
+      } catch (err) {
+        console.log(500, "Fout bij detecteren bestandsformaat");
+      }
+    };
+    var createControllerMethods = ({ strapi }) => ({
+      index(ctx) {
+        ctx.body = strapi.plugin(PLUGIN_ID$1).service("service").getWelcomeMessage();
+      },
+      async fetchAllImages(ctx) {
+        try {
+          const files = await strapi.documents("plugin::upload.file").findMany({
+            filters: {
+              mime: {
+                $startsWith: "image/"
+              }
+            }
+          });
+          console.log("Files:", files);
+          const images = files.map((file) => ({
+            id: file.id,
+            name: file.name,
+            url: file.url,
+            mime: file.mime,
+            type: determineFileType(file.mime)
+          })).filter((image) => image.type !== null);
+          return ctx.send({ data: images });
+        } catch (error) {
+          console.error("Error fetching files using Document Service:", error);
+          return ctx.send({ data: [] }, 500);
+        }
+      },
+      async autoWebp(ctx) {
+        const storedValue = await strapi.store({
+          type: "plugin",
+          name: PLUGIN_ID$1,
+          key: "autoConvertEnabled"
+        }).get();
+        const enabled = storedValue?.value === true || false;
+        if (enabled) {
+          try {
+            if (!ctx.request.files || !ctx.request.files.files) {
+              return ctx.badRequest("Geen bestand ge\xFCpload");
+            }
+            const files = Array.isArray(ctx.request.files.files) ? ctx.request.files.files : [ctx.request.files.files];
+            const results = [];
+            for (const file of files) {
+              if (file.type.startsWith("image/") && (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg") || file.name.endsWith(".png"))) {
+                try {
+                  const buffer = fs.readFileSync(file.path);
+                  const fileInfo = path.parse(file.name);
+                  const webpFilename = `${fileInfo.name}.webp`;
+                  const webpPath = path.join(path.dirname(file.path), webpFilename);
+                  await sharp(buffer).webp({ quality: 85 }).toFile(webpPath);
+                  results.push({
+                    id: file.id,
+                    // Assuming file object from upload has an ID
+                    name: file.name,
+                    // Original name
+                    convertedFile: webpFilename,
+                    // This seems different from other controllers, might need adjustment
+                    success: true,
+                    path: webpPath,
+                    // This seems different from other controllers, might need adjustment
+                    type: file.name.split(".").pop().toUpperCase() || "N/A",
+                    // Original type from name
+                    newType: webpFilename.split(".").pop().toUpperCase() || "N/A"
+                    // New type from new name
+                  });
+                } catch (error) {
+                  results.push({
+                    id: file.id,
+                    // Assuming file object from upload has an ID
+                    originalFile: file.name,
+                    success: false,
+                    error: error.message
+                  });
+                }
+              } else {
+                results.push({
+                  id: file.id,
+                  originalFile: file.name,
+                  success: false,
+                  error: "Bestand is geen JPG of PNG"
+                });
+              }
+            }
+            return ctx.send({
+              message: "Verwerking voltooid",
+              results
+            });
+          } catch (error) {
+            return ctx.badRequest(`Verwerking mislukt: ${error.message}`);
+          }
+        }
+      },
+      async convertToWebp(ctx) {
+        try {
+          const { files } = ctx.request.body;
+          if (!files || !Array.isArray(files) || files.length === 0) {
+            return ctx.badRequest("Geen bestanden geselecteerd voor conversie");
+          }
+          const conversionResults = [];
+          for (const file of files) {
+            try {
+              const fileData = await strapi.entityService.findOne("plugin::upload.file", file.id, {
+                populate: "*"
+                // Zorg ervoor dat we alle gerelateerde data krijgen
+              });
+              if (!fileData) {
+                conversionResults.push({
+                  id: file.id,
+                  name: file.name,
+                  success: false,
+                  message: "Bestand niet gevonden in database"
+                });
+                continue;
+              }
+              if (convertUtils$1.shouldConvert(fileData.mime, "webp")) {
+                const publicDir = strapi.dirs.static.public;
+                const originalUrl = fileData.url;
+                const originalPath = path.join(publicDir, originalUrl.startsWith("/") ? originalUrl.substring(1) : originalUrl);
+                const originalExt = path.extname(originalPath);
+                const originalName = path.basename(originalPath, originalExt);
+                const originalDir = path.dirname(originalPath);
+                const webpName = originalName + ".webp";
+                const webpPath = path.join(originalDir, webpName);
+                const webpUrl = originalUrl.replace(originalExt, ".webp");
+                if (!fs.existsSync(originalPath)) {
+                  conversionResults.push({
+                    id: file.id,
+                    name: file.name,
+                    success: false,
+                    message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+                  });
+                  continue;
+                }
+                try {
+                  const imageBuffer = fs.readFileSync(originalPath);
+                  const sharpImage = sharp(imageBuffer);
+                  await sharpImage.webp({
+                    quality: 80,
+                    lossless: false,
+                    nearLossless: false,
+                    smartSubsample: true
+                  }).toFile(webpPath);
+                  const newFormats = {};
+                  if (fileData.formats) {
+                    for (const [formatName, formatData] of Object.entries(fileData.formats)) {
+                      if (formatData && formatData.url) {
+                        const formatUrl = formatData.url;
+                        const formatPath = path.join(publicDir, formatUrl.startsWith("/") ? formatUrl.substring(1) : formatUrl);
+                        const formatExt = path.extname(formatPath);
+                        const formatBaseName = path.basename(formatPath, formatExt);
+                        const formatDir = path.dirname(formatPath);
+                        const newFormatName = formatBaseName + ".webp";
+                        const newFormatPath = path.join(formatDir, newFormatName);
+                        const newFormatUrl = formatUrl.replace(formatExt, ".webp");
+                        if (fs.existsSync(formatPath)) {
+                          try {
+                            await sharp(formatPath).webp({
+                              quality: 80,
+                              lossless: false,
+                              nearLossless: false,
+                              smartSubsample: true
+                            }).toFile(newFormatPath);
+                            fs.unlinkSync(formatPath);
+                            newFormats[formatName] = {
+                              ...formatData,
+                              ext: ".webp",
+                              mime: "image/webp",
+                              name: newFormatName,
+                              path: newFormatUrl.substring(1),
+                              // Verwijder voorste slash
+                              url: newFormatUrl,
+                              size: fs.statSync(newFormatPath).size
+                            };
+                          } catch (formatError) {
+                            console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                          }
+                        } else {
+                          console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
+                        }
+                      }
+                    }
+                  }
+                  const fileSize = fs.statSync(webpPath).size;
+                  await strapi.entityService.update("plugin::upload.file", file.id, {
+                    data: {
+                      name: webpName,
+                      ext: ".webp",
+                      mime: "image/webp",
+                      url: webpUrl,
+                      size: fileSize,
+                      formats: Object.keys(newFormats).length > 0 ? newFormats : null
+                    }
+                  });
+                  fs.unlinkSync(originalPath);
+                  conversionResults.push({
+                    id: file.id,
+                    name: fileData.name,
+                    // Original name from fileData
+                    success: true,
+                    newName: webpName,
+                    // New name
+                    newUrl: webpUrl,
+                    type: fileData.ext?.substring(1).toUpperCase() || "N/A",
+                    // Original type from fileData.ext
+                    newType: webpName.split(".").pop().toUpperCase() || "N/A"
+                    // New type from webpName
+                  });
+                } catch (conversionError) {
+                  console.error("Fout bij conversie:", conversionError);
+                  conversionResults.push({
+                    id: file.id,
+                    name: fileData.name,
+                    // Original name from fileData
+                    success: false,
+                    message: `Conversiefout: ${conversionError.message}`
+                  });
+                }
+              } else {
+                conversionResults.push({
+                  id: file.id,
+                  name: fileData.name,
+                  // Original name from fileData
+                  success: false,
+                  message: fileData.mime === "image/webp" ? "Bestand is al in WebP-formaat" : "Bestandstype niet ondersteund voor conversie"
+                });
+              }
+            } catch (fileError) {
+              console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
+              conversionResults.push({
+                id: file.id,
+                name: file.name,
+                success: false,
+                message: `Fout: ${fileError.message}`
+              });
+            }
+          }
+          try {
+            strapi.eventHub.emit("media-library.assets.refresh");
+          } catch (err) {
+            console.error("Fout bij vernieuwen van media library:", err);
+          }
+          return ctx.send({
+            message: "Beeldconversieproces voltooid.",
+            results: conversionResults,
+            totalConverted: conversionResults.filter((r) => r.success).length,
+            totalFailed: conversionResults.filter((r) => !r.success).length
+          }, 200);
+        } catch (error) {
+          console.error("Fout bij beeldconversie:", error);
+          return ctx.badRequest(`Fout bij beeldconversie: ${error.message}`);
+        }
+      },
+      async convertToPng(ctx) {
+        try {
+          const { files } = ctx.request.body;
+          if (!files || !Array.isArray(files) || files.length === 0) {
+            return ctx.badRequest("Geen bestanden geselecteerd voor conversie");
+          }
+          const conversionResults = [];
+          for (const file of files) {
+            try {
+              const fileData = await strapi.entityService.findOne("plugin::upload.file", file.id, {
+                populate: "*"
+                // Zorg ervoor dat we alle gerelateerde data krijgen
+              });
+              if (!fileData) {
+                conversionResults.push({
+                  id: file.id,
+                  name: file.name,
+                  success: false,
+                  message: "Bestand niet gevonden in database"
+                });
+                continue;
+              }
+              if (convertUtils$1.shouldConvert(fileData.mime, "png")) {
+                const publicDir = strapi.dirs.static.public;
+                const originalUrl = fileData.url;
+                const originalPath = path.join(publicDir, originalUrl.startsWith("/") ? originalUrl.substring(1) : originalUrl);
+                const originalExt = path.extname(originalPath);
+                const originalName = path.basename(originalPath, originalExt);
+                const originalDir = path.dirname(originalPath);
+                const pngName = originalName + ".png";
+                const pngPath = path.join(originalDir, pngName);
+                const pngUrl = originalUrl.replace(originalExt, ".png");
+                if (!fs.existsSync(originalPath)) {
+                  conversionResults.push({
+                    id: file.id,
+                    name: file.name,
+                    success: false,
+                    message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+                  });
+                  continue;
+                }
+                try {
+                  const imageBuffer = fs.readFileSync(originalPath);
+                  const sharpImage = sharp(imageBuffer);
+                  await sharpImage.png({
+                    quality: 100,
+                    compressionLevel: 6
+                  }).toFile(pngPath);
+                  const newFormats = {};
+                  if (fileData.formats) {
+                    for (const [formatName, formatData] of Object.entries(fileData.formats)) {
+                      if (formatData && formatData.url) {
+                        const formatUrl = formatData.url;
+                        const formatPath = path.join(publicDir, formatUrl.startsWith("/") ? formatUrl.substring(1) : formatUrl);
+                        const formatExt = path.extname(formatPath);
+                        const formatBaseName = path.basename(formatPath, formatExt);
+                        const formatDir = path.dirname(formatPath);
+                        const newFormatName = formatBaseName + ".png";
+                        const newFormatPath = path.join(formatDir, newFormatName);
+                        const newFormatUrl = formatUrl.replace(formatExt, ".png");
+                        if (fs.existsSync(formatPath)) {
+                          try {
+                            await sharp(formatPath).png({
+                              quality: 100,
+                              compressionLevel: 6
+                            }).toFile(newFormatPath);
+                            fs.unlinkSync(formatPath);
+                            newFormats[formatName] = {
+                              ...formatData,
+                              ext: ".png",
+                              mime: "image/png",
+                              name: newFormatName,
+                              path: newFormatUrl.substring(1),
+                              // Verwijder voorste slash
+                              url: newFormatUrl,
+                              size: fs.statSync(newFormatPath).size
+                            };
+                          } catch (formatError) {
+                            console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                          }
+                        } else {
+                          console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
+                        }
+                      }
+                    }
+                  }
+                  const fileSize = fs.statSync(pngPath).size;
+                  await strapi.entityService.update("plugin::upload.file", file.id, {
+                    data: {
+                      name: pngName,
+                      ext: ".png",
+                      mime: "image/png",
+                      url: pngUrl,
+                      size: fileSize,
+                      formats: Object.keys(newFormats).length > 0 ? newFormats : null
+                    }
+                  });
+                  fs.unlinkSync(originalPath);
+                  conversionResults.push({
+                    id: file.id,
+                    name: fileData.name,
+                    // Original name from fileData
+                    success: true,
+                    newName: pngName,
+                    // New name
+                    newUrl: pngUrl,
+                    type: fileData.ext?.substring(1).toUpperCase() || "N/A",
+                    // Original type from fileData.ext
+                    newType: pngName.split(".").pop().toUpperCase() || "N/A"
+                    // New type from pngName
+                  });
+                } catch (conversionError) {
+                  console.error("Fout bij conversie:", conversionError);
+                  conversionResults.push({
+                    id: file.id,
+                    name: fileData.name,
+                    // Original name from fileData
+                    success: false,
+                    message: `Conversiefout: ${conversionError.message}`
+                  });
+                }
+              } else {
+                conversionResults.push({
+                  id: file.id,
+                  name: fileData.name,
+                  // Original name from fileData
+                  success: false,
+                  message: fileData.mime === "image/png" ? "Bestand is al in PNG-formaat" : "Bestandstype niet ondersteund voor conversie"
+                });
+              }
+            } catch (fileError) {
+              console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
+              conversionResults.push({
+                id: file.id,
+                name: file.name,
+                success: false,
+                message: `Fout: ${fileError.message}`
+              });
+            }
+          }
+          try {
+            strapi.eventHub.emit("media-library.assets.refresh");
+          } catch (err) {
+            console.error("Fout bij vernieuwen van media library:", err);
+          }
+          return ctx.send({
+            message: "PNG conversieproces voltooid.",
+            results: conversionResults,
+            totalConverted: conversionResults.filter((r) => r.success).length,
+            totalFailed: conversionResults.filter((r) => !r.success).length
+            // And here
+          }, 200);
+        } catch (error) {
+          console.error("Fout bij PNG conversie:", error);
+          return ctx.badRequest(`Fout bij PNG conversie: ${error.message}`);
+        }
+      },
+      async convertToJpg(ctx) {
+        try {
+          const { files } = ctx.request.body;
+          if (!files || !Array.isArray(files) || files.length === 0) {
+            return ctx.badRequest("Geen bestanden geselecteerd voor conversie");
+          }
+          const conversionResults = [];
+          for (const file of files) {
+            try {
+              const fileData = await strapi.entityService.findOne("plugin::upload.file", file.id, {
+                populate: "*"
+                // Zorg ervoor dat we alle gerelateerde data krijgen
+              });
+              if (!fileData) {
+                conversionResults.push({
+                  id: file.id,
+                  name: file.name,
+                  success: false,
+                  message: "Bestand niet gevonden in database"
+                });
+                continue;
+              }
+              if (convertUtils$1.shouldConvert(fileData.mime, "jpg")) {
+                const publicDir = strapi.dirs.static.public;
+                const originalUrl = fileData.url;
+                const originalPath = path.join(publicDir, originalUrl.startsWith("/") ? originalUrl.substring(1) : originalUrl);
+                const originalExt = path.extname(originalPath);
+                const originalName = path.basename(originalPath, originalExt);
+                const originalDir = path.dirname(originalPath);
+                const jpgName = originalName + ".jpg";
+                const jpgPath = path.join(originalDir, jpgName);
+                const jpgUrl = originalUrl.replace(originalExt, ".jpg");
+                if (!fs.existsSync(originalPath)) {
+                  conversionResults.push({
+                    id: file.id,
+                    name: file.name,
+                    success: false,
+                    message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+                  });
+                  continue;
+                }
+                try {
+                  const imageBuffer = fs.readFileSync(originalPath);
+                  const sharpImage = sharp(imageBuffer);
+                  await sharpImage.jpeg({
+                    quality: 85,
+                    progressive: true
+                  }).toFile(jpgPath);
+                  const newFormats = {};
+                  if (fileData.formats) {
+                    for (const [formatName, formatData] of Object.entries(fileData.formats)) {
+                      if (formatData && formatData.url) {
+                        const formatUrl = formatData.url;
+                        const formatPath = path.join(publicDir, formatUrl.startsWith("/") ? formatUrl.substring(1) : formatUrl);
+                        const formatExt = path.extname(formatPath);
+                        const formatBaseName = path.basename(formatPath, formatExt);
+                        const formatDir = path.dirname(formatPath);
+                        const newFormatName = formatBaseName + ".jpg";
+                        const newFormatPath = path.join(formatDir, newFormatName);
+                        const newFormatUrl = formatUrl.replace(formatExt, ".jpg");
+                        if (fs.existsSync(formatPath)) {
+                          try {
+                            await sharp(formatPath).jpeg({
+                              quality: 85,
+                              progressive: true
+                            }).toFile(newFormatPath);
+                            fs.unlinkSync(formatPath);
+                            newFormats[formatName] = {
+                              ...formatData,
+                              ext: ".jpg",
+                              mime: "image/jpeg",
+                              name: newFormatName,
+                              path: newFormatUrl.substring(1),
+                              // Verwijder voorste slash
+                              url: newFormatUrl,
+                              size: fs.statSync(newFormatPath).size
+                            };
+                          } catch (formatError) {
+                            console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                          }
+                        } else {
+                          console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
+                        }
+                      }
+                    }
+                  }
+                  const fileSize = fs.statSync(jpgPath).size;
+                  await strapi.entityService.update("plugin::upload.file", file.id, {
+                    data: {
+                      name: jpgName,
+                      ext: ".jpg",
+                      mime: "image/jpeg",
+                      url: jpgUrl,
+                      size: fileSize,
+                      formats: Object.keys(newFormats).length > 0 ? newFormats : null
+                    }
+                  });
+                  fs.unlinkSync(originalPath);
+                  conversionResults.push({
+                    id: file.id,
+                    name: fileData.name,
+                    // Original name from fileData
+                    success: true,
+                    newName: jpgName,
+                    // New name
+                    newUrl: jpgUrl,
+                    type: fileData.ext?.substring(1).toUpperCase() || "N/A",
+                    // Original type from fileData.ext
+                    newType: jpgName.split(".").pop().toUpperCase() || "N/A"
+                    // New type from jpgName
+                  });
+                } catch (conversionError) {
+                  console.error("Fout bij conversie:", conversionError);
+                  conversionResults.push({
+                    id: file.id,
+                    name: fileData.name,
+                    // Original name from fileData
+                    success: false,
+                    message: `Conversiefout: ${conversionError.message}`
+                  });
+                }
+              } else {
+                conversionResults.push({
+                  id: file.id,
+                  name: fileData.name,
+                  // Original name from fileData
+                  success: false,
+                  message: fileData.mime === "image/jpeg" || fileData.mime === "image/jpg" ? "Bestand is al in JPG-formaat" : "Bestandstype niet ondersteund voor conversie"
+                });
+              }
+            } catch (fileError) {
+              console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
+              conversionResults.push({
+                id: file.id,
+                name: file.name,
+                success: false,
+                message: `Fout: ${fileError.message}`
+              });
+            }
+          }
+          try {
+            strapi.eventHub.emit("media-library.assets.refresh");
+          } catch (err) {
+            console.error("Fout bij vernieuwen van media library:", err);
+          }
+          return ctx.send({
+            message: "JPG conversieproces voltooid.",
+            results: conversionResults,
+            totalConverted: conversionResults.filter((r) => r.success).length,
+            totalFailed: conversionResults.filter((r) => !r.success).length
+          }, 200);
+        } catch (error) {
+          console.error("Fout bij JPG conversie:", error);
+          return ctx.badRequest(`Fout bij JPG conversie: ${error.message}`);
+        }
+      },
+      async setAutoConvert(ctx) {
+        try {
+          const { enabled } = ctx.request.body;
+          console.log("[SET-AUTO-CONVERT] Auto convert is:", enabled);
+          if (typeof enabled !== "boolean") {
+            return ctx.badRequest("Enabled parameter moet een boolean zijn");
+          }
+          await strapi.store({
+            type: "plugin",
+            name: PLUGIN_ID$1,
+            key: "autoConvertEnabled"
+          }).set({ value: enabled });
+          return ctx.send({
+            enabled,
+            message: `Automatische conversie is ${enabled ? "ingeschakeld" : "uitgeschakeld"}`
+          });
+        } catch (error) {
+          console.error("Fout bij het instellen van auto-convert:", error);
+          return ctx.badRequest(`Fout: ${error.message}`);
+        }
+      },
+      async getAutoConvert(ctx) {
+        try {
+          const storedValue = await strapi.store({
+            type: "plugin",
+            name: PLUGIN_ID$1,
+            key: "autoConvertEnabled"
+          }).get();
+          const enabled = storedValue?.value === true;
+          return ctx.send({
+            enabled
+          });
+        } catch (error) {
+          console.error("Fout bij het ophalen van auto-convert status:", error);
+          return ctx.badRequest(`Fout: ${error.message}`);
+        }
+      },
+      selectedFilesStore: /* @__PURE__ */ new Map(),
+      async setSelectedFiles(ctx) {
+        try {
+          const data = ctx.request.body;
+          if (!data.files || !Array.isArray(data.files)) {
+            return ctx.badRequest("Ongeldige aanvraag: fileIds moet een array van bestand-ID's zijn");
+          }
+          selectedFiles = data.files;
+          return ctx.send({
+            success: true,
+            message: "Geselecteerde bestanden opgeslagen",
+            count: data.files.length
+          });
+        } catch (error) {
+          console.error("[IMG-WEBP] Fout bij opslaan van geselecteerde bestanden:", error);
+          return ctx.badRequest("Er is een fout opgetreden bij het opslaan van selecties", { error: error.message });
+        }
+      },
+      async getSelectedFiles(ctx) {
+        return ctx.send({
+          files: selectedFiles
+        });
+      }
+    });
+    var createControllersObject = ({ strapi }) => ({
+      controller: createControllerMethods
+    });
+    var middlewares = {};
+    var policies = {};
+    var routes = {
+      "content-api": {
+        type: "content-api",
+        routes: []
+      },
+      "admin": {
+        type: "admin",
+        routes: [
+          {
+            method: "GET",
+            path: "/files",
+            // Or any path you prefer for your plugin's endpoint
+            handler: "controller.fetchAllImages",
+            config: {
+              policies: [],
+              auth: false
+              // Adjust authentication as needed
+            }
+          },
+          {
+            method: "POST",
+            path: "/convert-to-webp",
+            handler: "controller.convertToWebp",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "POST",
+            path: "/convert-to-png",
+            handler: "controller.convertToPng",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "POST",
+            path: "/convert-to-jpg",
+            handler: "controller.convertToJpg",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "POST",
+            path: "/auto-webp",
+            handler: "controller.autoWebp",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "POST",
+            path: "/set-auto-convert",
+            handler: "controller.setAutoConvert",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "GET",
+            path: "/get-auto-convert",
+            handler: "controller.getAutoConvert",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "POST",
+            path: "/selected-files",
+            handler: "controller.setSelectedFiles",
+            config: {
+              policies: [],
+              auth: false
+            }
+          },
+          {
+            method: "GET",
+            path: "/selected-files",
+            handler: "controller.getSelectedFiles",
+            config: {
+              policies: [],
+              auth: false
+            }
+          }
+        ]
+      }
+    };
+    var service = ({ strapi }) => ({
+      getWelcomeMessage() {
+        return "Welcome to Strapi \u{1F680}";
+      }
+    });
+    var services = {
+      service
+    };
+    var index = ({ strapi }) => {
+      return {
+        register: register$1,
+        bootstrap: bootstrap$1,
+        destroy,
+        config,
+        contentTypes,
+        controllers: createControllersObject({ strapi }),
+        routes,
+        // ✅ this is now an array
+        services,
+        policies,
+        middlewares
+      };
+    };
+    module2.exports = index;
+  }
+});
+
+// <stdin>
+require_admin();
+require_server();

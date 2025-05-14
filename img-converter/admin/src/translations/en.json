@@ -1,0 +1,9 @@
+{
+  "img-converter.plugin.settings.section.label": "Image to WEBP",
+  "img-converter.plugin.name": "Image to WEBP",
+  "img-converter.homepage.title": "Image Converter Dashboard",
+  "img-converter.homepage.description": "Manage your image conversion settings here.",
+  "img-converter.buttonpage.description": "Fetch all the uploaded images in a list",
+  "img-converter.convertpage.description": "Select action you want to complete",
+  "img-converter.autoconvert.description": "Turn on auto convert to WebP?"
+}

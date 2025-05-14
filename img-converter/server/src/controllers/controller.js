@@ -1,3 +1,5 @@
+import { PLUGIN_ID } from '../../../admin/src/pluginId';
+
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
@@ -31,7 +33,7 @@ const createControllerMethods = ({ strapi }) => ({
 
   index(ctx) {
     ctx.body = strapi
-      .plugin('img-webp')
+      .plugin(PLUGIN_ID)
       // the name of the service file & the method.
       .service('service')
       .getWelcomeMessage();
@@ -67,7 +69,7 @@ const createControllerMethods = ({ strapi }) => ({
   async autoWebp(ctx) {
     const storedValue = await strapi.store({
       type: 'plugin',
-      name: 'img-webp',
+      name: PLUGIN_ID,
       key: 'autoConvertEnabled'
     }).get();
 
@@ -785,7 +787,7 @@ const createControllerMethods = ({ strapi }) => ({
       // Sla de voorkeur op in de plugin configuratie
       await strapi.store({
         type: 'plugin',
-        name: 'img-webp',
+        name: PLUGIN_ID,
         key: 'autoConvertEnabled'
       }).set({ value: enabled });
 
@@ -806,7 +808,7 @@ const createControllerMethods = ({ strapi }) => ({
       // Haal de voorkeur op uit de plugin configuratie
       const storedValue = await strapi.store({
         type: 'plugin',
-        name: 'img-webp',
+        name: PLUGIN_ID,
         key: 'autoConvertEnabled'
       }).get();
 
