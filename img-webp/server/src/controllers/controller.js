@@ -22,6 +22,7 @@ const createControllerMethods = ({ strapi }) => ({
 
     const enabled = storedValue?.value === true;
 
+    console.log(`[AUTO-WEBP] Auto-conversie is ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
     if (enabled) {
       try {
         // Controleer of er een bestandsupload is
