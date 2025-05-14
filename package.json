@@ -17,9 +17,6 @@
       "default": "./dist/server/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "strapi-plugin build",
     "watch": "strapi-plugin watch",
@@ -54,11 +51,11 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "@lodesnaet/strapi-plugin-img-converter",
+    "name": "strapi-plugin-img-converter",
     "displayName": "img converter",
     "description": "This plugin will automatically convert all images (not SVGs and GIFs) into WEBPs."
   },
-  "name": "@lodesnaet/strapi-plugin-img-converter",
+  "name": "strapi-plugin-img-converter",
   "description": "This plugin will automatically convert all images (not SVGs) into WEBPs.",
   "license": "MIT",
   "repository": {
