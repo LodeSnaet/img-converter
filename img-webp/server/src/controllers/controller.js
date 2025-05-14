@@ -14,67 +14,86 @@ const createControllerMethods = ({ strapi }) => ({
       .getWelcomeMessage();
   },
   async autoWebp(ctx) {
-    try {
-      // Controleer of er een bestandsupload is
-      if (!ctx.request.files || !ctx.request.files.files) {
-        return ctx.badRequest('Geen bestand geüpload');
-      }
+    const storedValue = await strapi.store({
+      type: 'plugin',
+      name: 'img-webp',
+      key: 'autoConvertEnabled'
+    }).get();
 
-      const files = Array.isArray(ctx.request.files.files)
-        ? ctx.request.files.files
-        : [ctx.request.files.files];
+    const enabled = storedValue?.value === true;
 
-      const results = [];
+    if (enabled) {
+      try {
+        // Controleer of er een bestandsupload is
+        if (!ctx.request.files || !ctx.request.files.files) {
+          return ctx.badRequest('Geen bestand geüpload');
+        }
 
-      // Verwerk elk bestand
-      for (const file of files) {
-        // Controleer of het bestand een jpg of png is
-        if (file.type.startsWith('image/') &&
-          (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') || file.name.endsWith('.png'))) {
+        const files = Array.isArray(ctx.request.files.files)
+          ? ctx.request.files.files
+          : [ctx.request.files.files];
 
-          try {
-            // Lees het bestand
-            const buffer = fs.readFileSync(file.path);
+        const results = [];
 
-            // Maak een nieuw bestandspad voor het WEBP-bestand
-            const fileInfo = path.parse(file.name);
-            const webpFilename = `${fileInfo.name}.webp`;
-            const webpPath = path.join(path.dirname(file.path), webpFilename);
+        // Verwerk elk bestand
+        for (const file of files) {
+          // Controleer of het bestand een jpg of png is
+          if (
+            file.type.startsWith('image/') &&
+            (file.name.endsWith('.jpg') ||
+              file.name.endsWith('.jpeg') ||
+              file.name.endsWith('.png'))
+          ) {
+            try {
+              // Lees het bestand
+              const buffer = fs.readFileSync(file.path);
 
-            // Converteer naar WEBP
-            await sharp(buffer)
-              .webp({ quality: 85 })
-              .toFile(webpPath);
+              // Maak een nieuw bestandspad voor het WEBP-bestand
+              const fileInfo = path.parse(file.name);
+              const webpFilename = `${fileInfo.name}.webp`;
+              const webpPath = path.join(path.dirname(file.path), webpFilename);
 
-            // Voeg het resultaat toe
+              // Converteer naar WEBP
+              await sharp(buffer).webp({ quality: 85 }).toFile(webpPath);
+
+              // Voeg het resultaat toe
+              // Note: The structure here is slightly different from convertToXyz.
+              // We'll add type and newType based on file.name and webpFilename
+              results.push({
+                id: file.id, // Assuming file object from upload has an ID
+                name: file.name, // Original name
+                convertedFile: webpFilename, // This seems different from other controllers, might need adjustment
+                success: true,
+                path: webpPath, // This seems different from other controllers, might need adjustment
+                type: file.name.split('.').pop().toUpperCase() || 'N/A', // Original type from name
+                newType: webpFilename.split('.').pop().toUpperCase() || 'N/A', // New type from new name
+              });
+            } catch (error) {
+              results.push({
+                id: file.id, // Assuming file object from upload has an ID
+                originalFile: file.name,
+                success: false,
+                error: error.message,
+              });
+            }
+          } else {
+            // Assuming file object from upload has an ID
             results.push({
-              originalFile: file.name,
-              convertedFile: webpFilename,
-              success: true,
-              path: webpPath
-            });
-          } catch (error) {
-            results.push({
+              id: file.id,
               originalFile: file.name,
               success: false,
-              error: error.message
+              error: 'Bestand is geen JPG of PNG',
             });
           }
-        } else {
-          results.push({
-            originalFile: file.name,
-            success: false,
-            error: 'Bestand is geen JPG of PNG'
-          });
         }
-      }
 
-      return ctx.send({
-        message: 'Verwerking voltooid',
-        results
-      });
-    } catch (error) {
-      return ctx.badRequest(`Verwerking mislukt: ${error.message}`);
+        return ctx.send({
+          message: 'Verwerking voltooid',
+          results,
+        });
+      } catch (error) {
+        return ctx.badRequest(`Verwerking mislukt: ${error.message}`);
+      }
     }
   },
   async convertToWebp(ctx) {
@@ -223,18 +242,21 @@ const createControllerMethods = ({ strapi }) => ({
               // Verwijder het oorspronkelijke bestand NA de database-update
               fs.unlinkSync(originalPath);
 
+              // ADDED type and newType
               conversionResults.push({
                 id: file.id,
-                name: file.name,
+                name: fileData.name, // Original name from fileData
                 success: true,
-                newName: webpName,
-                newUrl: webpUrl
+                newName: webpName, // New name
+                newUrl: webpUrl,
+                type: fileData.ext?.substring(1).toUpperCase() || 'N/A', // Original type from fileData.ext
+                newType: webpName.split('.').pop().toUpperCase() || 'N/A' // New type from webpName
               });
             } catch (conversionError) {
               console.error('Fout bij conversie:', conversionError);
               conversionResults.push({
                 id: file.id,
-                name: file.name,
+                name: fileData.name, // Original name from fileData
                 success: false,
                 message: `Conversiefout: ${conversionError.message}`
               });
@@ -242,7 +264,7 @@ const createControllerMethods = ({ strapi }) => ({
           } else {
             conversionResults.push({
               id: file.id,
-              name: file.name,
+              name: fileData.name, // Original name from fileData
               success: false,
               message: fileData.mime === 'image/webp' ?
                 'Bestand is al in WebP-formaat' :
@@ -285,417 +307,423 @@ const createControllerMethods = ({ strapi }) => ({
     }
   },
   async convertToPng(ctx) {
-  try {
-    // console.log("PNG conversie gestart");
-    const { files } = ctx.request.body;
-    // console.log("Ontvangen bestanden voor PNG conversie:", files);
+    try {
+      // console.log("PNG conversie gestart");
+      const { files } = ctx.request.body;
+      // console.log("Ontvangen bestanden voor PNG conversie:", files);
 
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
-    }
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
+      }
 
-    const conversionResults = [];
+      const conversionResults = [];
 
-    // Verwerk elk bestand
-    for (const file of files) {
-      try {
-        // Haal de volledige bestandsgegevens op, inclusief formats
-        const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
-          populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
-        });
-        // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
-
-        if (!fileData) {
-          conversionResults.push({
-            id: file.id,
-            name: file.name,
-            success: false,
-            message: 'Bestand niet gevonden in database'
+      // Verwerk elk bestand
+      for (const file of files) {
+        try {
+          // Haal de volledige bestandsgegevens op, inclusief formats
+          const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
+            populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
           });
-          continue;
-        }
+          // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
 
-        // Controleer of het bestand geconverteerd kan worden
-        if (convertUtils.shouldConvert(fileData.mime, 'png')) {
-          const publicDir = strapi.dirs.static.public;
-          const originalUrl = fileData.url;
-          const originalPath = path.join(publicDir, originalUrl.startsWith('/') ? originalUrl.substring(1) : originalUrl);
-          const originalExt = path.extname(originalPath);
-          const originalName = path.basename(originalPath, originalExt);
-          const originalDir = path.dirname(originalPath);
-
-          const pngName = originalName + '.png';
-          const pngPath = path.join(originalDir, pngName);
-          const pngUrl = originalUrl.replace(originalExt, '.png');
-
-          // console.log('Origineel pad:', originalPath);
-          // console.log('PNG pad:', pngPath);
-          // console.log('PNG URL:', pngUrl);
-
-          if (!fs.existsSync(originalPath)) {
+          if (!fileData) {
             conversionResults.push({
               id: file.id,
               name: file.name,
               success: false,
-              message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+              message: 'Bestand niet gevonden in database'
             });
             continue;
           }
 
-          try {
-            // Lees de oorspronkelijke afbeelding in
-            const imageBuffer = fs.readFileSync(originalPath);
-            const sharpImage = sharp(imageBuffer);
+          // Controleer of het bestand geconverteerd kan worden
+          if (convertUtils.shouldConvert(fileData.mime, 'png')) {
+            const publicDir = strapi.dirs.static.public;
+            const originalUrl = fileData.url;
+            const originalPath = path.join(publicDir, originalUrl.startsWith('/') ? originalUrl.substring(1) : originalUrl);
+            const originalExt = path.extname(originalPath);
+            const originalName = path.basename(originalPath, originalExt);
+            const originalDir = path.dirname(originalPath);
 
-            // Converteer het oorspronkelijke bestand naar PNG
-            await sharpImage
-              .png({
-                quality: 100,
-                compressionLevel: 6
-              })
-              .toFile(pngPath);
+            const pngName = originalName + '.png';
+            const pngPath = path.join(originalDir, pngName);
+            const pngUrl = originalUrl.replace(originalExt, '.png');
 
-            // Bereid de nieuwe formats object voor
-            const newFormats = {};
+            // console.log('Origineel pad:', originalPath);
+            // console.log('PNG pad:', pngPath);
+            // console.log('PNG URL:', pngUrl);
 
-            // Converteer alle formaten als ze bestaan
-            if (fileData.formats) {
-/*
-              console.log("Converteren van afgeleide versies...");
-*/
+            if (!fs.existsSync(originalPath)) {
+              conversionResults.push({
+                id: file.id,
+                name: file.name,
+                success: false,
+                message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+              });
+              continue;
+            }
 
-              for (const [formatName, formatData] of Object.entries(fileData.formats)) {
-                if (formatData && formatData.url) {
-                  const formatUrl = formatData.url;
-                  const formatPath = path.join(publicDir, formatUrl.startsWith('/') ? formatUrl.substring(1) : formatUrl);
-                  const formatExt = path.extname(formatPath);
-                  const formatBaseName = path.basename(formatPath, formatExt);
-                  const formatDir = path.dirname(formatPath);
+            try {
+              // Lees de oorspronkelijke afbeelding in
+              const imageBuffer = fs.readFileSync(originalPath);
+              const sharpImage = sharp(imageBuffer);
 
-                  const newFormatName = formatBaseName + '.png';
-                  const newFormatPath = path.join(formatDir, newFormatName);
-                  const newFormatUrl = formatUrl.replace(formatExt, '.png');
+              // Converteer het oorspronkelijke bestand naar PNG
+              await sharpImage
+                .png({
+                  quality: 100,
+                  compressionLevel: 6
+                })
+                .toFile(pngPath);
 
-                  // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+              // Bereid de nieuwe formats object voor
+              const newFormats = {};
 
-                  if (fs.existsSync(formatPath)) {
-                    try {
-                      // Converteer de afgeleide afbeelding
-                      await sharp(formatPath)
-                        .png({
-                          quality: 100,
-                          compressionLevel: 6
-                        })
-                        .toFile(newFormatPath);
+              // Converteer alle formaten als ze bestaan
+              if (fileData.formats) {
+                /*
+                                console.log("Converteren van afgeleide versies...");
+                */
 
-                      // Verwijder het oude formaat bestand
-                      fs.unlinkSync(formatPath);
+                for (const [formatName, formatData] of Object.entries(fileData.formats)) {
+                  if (formatData && formatData.url) {
+                    const formatUrl = formatData.url;
+                    const formatPath = path.join(publicDir, formatUrl.startsWith('/') ? formatUrl.substring(1) : formatUrl);
+                    const formatExt = path.extname(formatPath);
+                    const formatBaseName = path.basename(formatPath, formatExt);
+                    const formatDir = path.dirname(formatPath);
 
-                      // Bijwerken van het format object
-                      newFormats[formatName] = {
-                        ...formatData,
-                        ext: '.png',
-                        mime: 'image/png',
-                        name: newFormatName,
-                        path: newFormatUrl.substring(1), // Verwijder voorste slash
-                        url: newFormatUrl,
-                        size: fs.statSync(newFormatPath).size,
-                      };
-                    } catch (formatError) {
-                      console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                    const newFormatName = formatBaseName + '.png';
+                    const newFormatPath = path.join(formatDir, newFormatName);
+                    const newFormatUrl = formatUrl.replace(formatExt, '.png');
+
+                    // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+
+                    if (fs.existsSync(formatPath)) {
+                      try {
+                        // Converteer de afgeleide afbeelding
+                        await sharp(formatPath)
+                          .png({
+                            quality: 100,
+                            compressionLevel: 6
+                          })
+                          .toFile(newFormatPath);
+
+                        // Verwijder het oude formaat bestand
+                        fs.unlinkSync(formatPath);
+
+                        // Bijwerken van het format object
+                        newFormats[formatName] = {
+                          ...formatData,
+                          ext: '.png',
+                          mime: 'image/png',
+                          name: newFormatName,
+                          path: newFormatUrl.substring(1), // Verwijder voorste slash
+                          url: newFormatUrl,
+                          size: fs.statSync(newFormatPath).size,
+                        };
+                      } catch (formatError) {
+                        console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                      }
+                    } else {
+                      console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
                     }
-                  } else {
-                    console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
                   }
                 }
               }
+
+              // Update het bestand in de database met alle nieuwe informatie
+              const fileSize = fs.statSync(pngPath).size;
+              await strapi.entityService.update('plugin::upload.file', file.id, {
+                data: {
+                  name: pngName,
+                  ext: '.png',
+                  mime: 'image/png',
+                  url: pngUrl,
+                  size: fileSize,
+                  formats: Object.keys(newFormats).length > 0 ? newFormats : null,
+                }
+              });
+
+              // Verwijder het oorspronkelijke bestand NA de database-update
+              fs.unlinkSync(originalPath);
+
+              // ADDED type and newType
+              conversionResults.push({
+                id: file.id,
+                name: fileData.name, // Original name from fileData
+                success: true,
+                newName: pngName, // New name
+                newUrl: pngUrl,
+                type: fileData.ext?.substring(1).toUpperCase() || 'N/A', // Original type from fileData.ext
+                newType: pngName.split('.').pop().toUpperCase() || 'N/A' // New type from pngName
+              });
+            } catch (conversionError) {
+              console.error('Fout bij conversie:', conversionError);
+              conversionResults.push({
+                id: file.id,
+                name: fileData.name, // Original name from fileData
+                success: false,
+                message: `Conversiefout: ${conversionError.message}`
+              });
             }
-
-            // Update het bestand in de database met alle nieuwe informatie
-            const fileSize = fs.statSync(pngPath).size;
-            await strapi.entityService.update('plugin::upload.file', file.id, {
-              data: {
-                name: pngName,
-                ext: '.png',
-                mime: 'image/png',
-                url: pngUrl,
-                size: fileSize,
-                formats: Object.keys(newFormats).length > 0 ? newFormats : null,
-              }
-            });
-
-            // Verwijder het oorspronkelijke bestand NA de database-update
-            fs.unlinkSync(originalPath);
-
+          } else {
             conversionResults.push({
               id: file.id,
-              name: file.name,
-              success: true,
-              newName: pngName,
-              newUrl: pngUrl
-            });
-          } catch (conversionError) {
-            console.error('Fout bij conversie:', conversionError);
-            conversionResults.push({
-              id: file.id,
-              name: file.name,
+              name: fileData.name, // Original name from fileData
               success: false,
-              message: `Conversiefout: ${conversionError.message}`
+              message: fileData.mime === 'image/png' ?
+                'Bestand is al in PNG-formaat' :
+                'Bestandstype niet ondersteund voor conversie'
             });
           }
-        } else {
+        } catch (fileError) {
+          console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
           conversionResults.push({
             id: file.id,
             name: file.name,
             success: false,
-            message: fileData.mime === 'image/png' ?
-              'Bestand is al in PNG-formaat' :
-              'Bestandstype niet ondersteund voor conversie'
+            message: `Fout: ${fileError.message}`
           });
         }
-      } catch (fileError) {
-        console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
-        conversionResults.push({
-          id: file.id,
-          name: file.name,
-          success: false,
-          message: `Fout: ${fileError.message}`
-        });
       }
+
+      // Stuur een signaal naar de Strapi admin om de mediabibliotheek te vernieuwen
+      try {
+        strapi.eventHub.emit('media-library.assets.refresh');
+      } catch (err) {
+        console.error("Fout bij vernieuwen van media library:", err);
+      }
+
+      // // Fix the bug with totalFailed
+      // console.log("PNG conversion completed. Results:", {
+      //   totalConverted: conversionResults.filter(r => r.success).length,
+      //   totalFailed: conversionResults.filter(r => !r.success).length // Correction here
+      // });
+
+      return ctx.send({
+        message: 'PNG conversieproces voltooid.',
+        results: conversionResults,
+        totalConverted: conversionResults.filter(r => r.success).length,
+        totalFailed: conversionResults.filter(r => !r.success).length, // And here
+      }, 200);
+
+    } catch (error) {
+      console.error('Fout bij PNG conversie:', error);
+      return ctx.badRequest(`Fout bij PNG conversie: ${error.message}`);
     }
-
-    // Stuur een signaal naar de Strapi admin om de mediabibliotheek te vernieuwen
-    try {
-      strapi.eventHub.emit('media-library.assets.refresh');
-    } catch (err) {
-      console.error("Fout bij vernieuwen van media library:", err);
-    }
-
-    // // Fix de bug met totalFailed
-    // console.log("PNG conversie voltooid. Resultaten:", {
-    //   totalConverted: conversionResults.filter(r => r.success).length,
-    //   totalFailed: conversionResults.filter(r => !r.success).length // Correctie hier
-    // });
-
-    return ctx.send({
-      message: 'PNG conversieproces voltooid.',
-      results: conversionResults,
-      totalConverted: conversionResults.filter(r => r.success).length,
-      totalFailed: conversionResults.filter(r => !r.success).length, // En hier
-    }, 200);
-
-  } catch (error) {
-    console.error('Fout bij PNG conversie:', error);
-    return ctx.badRequest(`Fout bij PNG conversie: ${error.message}`);
-  }
-},
+  },
   async convertToJpg(ctx) {
-  try {
-    // console.log("JPG conversie gestart");
-    const { files } = ctx.request.body;
-    // console.log("Ontvangen bestanden voor JPG conversie:", files);
+    try {
+      // console.log("JPG conversie gestart");
+      const { files } = ctx.request.body;
+      // console.log("Ontvangen bestanden voor JPG conversie:", files);
 
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
-    }
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return ctx.badRequest('Geen bestanden geselecteerd voor conversie');
+      }
 
-    const conversionResults = [];
+      const conversionResults = [];
 
-    // Verwerk elk bestand
-    for (const file of files) {
-      try {
-        // Haal de volledige bestandsgegevens op, inclusief formats
-        const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
-          populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
-        });
-        // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
-
-        if (!fileData) {
-          conversionResults.push({
-            id: file.id,
-            name: file.name,
-            success: false,
-            message: 'Bestand niet gevonden in database'
+      // Verwerk elk bestand
+      for (const file of files) {
+        try {
+          // Haal de volledige bestandsgegevens op, inclusief formats
+          const fileData = await strapi.entityService.findOne('plugin::upload.file', file.id, {
+            populate: '*'  // Zorg ervoor dat we alle gerelateerde data krijgen
           });
-          continue;
-        }
+          // console.log(`Bestand ID: ${file.id}, Naam: ${file.name}, MIME: ${fileData?.mime}`);
 
-        // Controleer of het bestand geconverteerd kan worden
-        if (convertUtils.shouldConvert(fileData.mime, 'jpg')) {
-          const publicDir = strapi.dirs.static.public;
-          const originalUrl = fileData.url;
-          const originalPath = path.join(publicDir, originalUrl.startsWith('/') ? originalUrl.substring(1) : originalUrl);
-          const originalExt = path.extname(originalPath);
-          const originalName = path.basename(originalPath, originalExt);
-          const originalDir = path.dirname(originalPath);
-
-          const jpgName = originalName + '.jpg';
-          const jpgPath = path.join(originalDir, jpgPath);
-          const jpgUrl = originalUrl.replace(originalExt, '.jpg');
-
-          // console.log('Origineel pad:', originalPath);
-          // console.log('JPG pad:', jpgPath);
-          // console.log('JPG URL:', jpgUrl);
-
-          if (!fs.existsSync(originalPath)) {
+          if (!fileData) {
             conversionResults.push({
               id: file.id,
               name: file.name,
               success: false,
-              message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+              message: 'Bestand niet gevonden in database'
             });
             continue;
           }
 
-          try {
-            // Lees de oorspronkelijke afbeelding in
-            const imageBuffer = fs.readFileSync(originalPath);
-            const sharpImage = sharp(imageBuffer);
+          // Controleer of het bestand geconverteerd kan worden
+          if (convertUtils.shouldConvert(fileData.mime, 'jpg')) {
+            const publicDir = strapi.dirs.static.public;
+            const originalUrl = fileData.url;
+            const originalPath = path.join(publicDir, originalUrl.startsWith('/') ? originalUrl.substring(1) : originalUrl);
+            const originalExt = path.extname(originalPath);
+            const originalName = path.basename(originalPath, originalExt);
+            const originalDir = path.dirname(originalPath);
 
-            // Converteer het oorspronkelijke bestand naar JPG
-            await sharpImage
-              .jpeg({
-                quality: 85,
-                progressive: true
-              })
-              .toFile(jpgPath);
+            const jpgName = originalName + '.jpg';
+            const jpgPath = path.join(originalDir, jpgName); // Corrected line
+            const jpgUrl = originalUrl.replace(originalExt, '.jpg');
 
-            // Bereid de nieuwe formats object voor
-            const newFormats = {};
+            // console.log('Origineel pad:', originalPath);
+            // console.log('JPG pad:', jpgPath);
+            // console.log('JPG URL:', jpgUrl);
 
-            // Converteer alle formaten als ze bestaan
-            if (fileData.formats) {
-              // console.log("Converteren van afgeleide versies...");
+            if (!fs.existsSync(originalPath)) {
+              conversionResults.push({
+                id: file.id,
+                name: file.name,
+                success: false,
+                message: `Origineel bestand niet gevonden op schijf: ${originalPath}`
+              });
+              continue;
+            }
 
-              for (const [formatName, formatData] of Object.entries(fileData.formats)) {
-                if (formatData && formatData.url) {
-                  const formatUrl = formatData.url;
-                  const formatPath = path.join(publicDir, formatUrl.startsWith('/') ? formatUrl.substring(1) : formatUrl);
-                  const formatExt = path.extname(formatPath);
-                  const formatBaseName = path.basename(formatPath, formatExt);
-                  const formatDir = path.dirname(formatPath);
+            try {
+              // Lees de oorspronkelijke afbeelding in
+              const imageBuffer = fs.readFileSync(originalPath);
+              const sharpImage = sharp(imageBuffer);
 
-                  const newFormatName = formatBaseName + '.jpg';
-                  const newFormatPath = path.join(formatDir, newFormatName);
-                  const newFormatUrl = formatUrl.replace(formatExt, '.jpg');
+              // Converteer het oorspronkelijke bestand naar JPG
+              await sharpImage
+                .jpeg({
+                  quality: 85,
+                  progressive: true
+                })
+                .toFile(jpgPath);
 
-                  // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+              // Bereid de nieuwe formats object voor
+              const newFormats = {};
 
-                  if (fs.existsSync(formatPath)) {
-                    try {
-                      // Converteer de afgeleide afbeelding
-                      await sharp(formatPath)
-                        .jpeg({
-                          quality: 85,
-                          progressive: true
-                        })
-                        .toFile(newFormatPath);
+              // Converteer alle formaten als ze bestaan
+              if (fileData.formats) {
+                // console.log("Converteren van afgeleide versies...");
 
-                      // Verwijder het oude formaat bestand
-                      fs.unlinkSync(formatPath);
+                for (const [formatName, formatData] of Object.entries(fileData.formats)) {
+                  if (formatData && formatData.url) {
+                    const formatUrl = formatData.url;
+                    const formatPath = path.join(publicDir, formatUrl.startsWith('/') ? formatUrl.substring(1) : formatUrl);
+                    const formatExt = path.extname(formatPath);
+                    const formatBaseName = path.basename(formatPath, formatExt);
+                    const formatDir = path.dirname(formatPath);
 
-                      // Bijwerken van het format object
-                      newFormats[formatName] = {
-                        ...formatData,
-                        ext: '.jpg',
-                        mime: 'image/jpeg',
-                        name: newFormatName,
-                        path: newFormatUrl.substring(1), // Verwijder voorste slash
-                        url: newFormatUrl,
-                        size: fs.statSync(newFormatPath).size,
-                      };
-                    } catch (formatError) {
-                      console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                    const newFormatName = formatBaseName + '.jpg';
+                    const newFormatPath = path.join(formatDir, newFormatName); // Corrected line
+                    const newFormatUrl = formatUrl.replace(formatExt, '.jpg');
+
+                    // console.log(`Converteren van formaat ${formatName}: ${formatPath} -> ${newFormatPath}`);
+
+                    if (fs.existsSync(formatPath)) {
+                      try {
+                        // Converteer de afgeleide afbeelding
+                        await sharp(formatPath)
+                          .jpeg({
+                            quality: 85,
+                            progressive: true
+                          })
+                          .toFile(newFormatPath);
+
+                        // Verwijder het oude formaat bestand
+                        fs.unlinkSync(formatPath);
+
+                        // Bijwerken van het format object
+                        newFormats[formatName] = {
+                          ...formatData,
+                          ext: '.jpg',
+                          mime: 'image/jpeg',
+                          name: newFormatName,
+                          path: newFormatUrl.substring(1), // Verwijder voorste slash
+                          url: newFormatUrl,
+                          size: fs.statSync(newFormatPath).size,
+                        };
+                      } catch (formatError) {
+                        console.error(`Fout bij converteren van formaat ${formatName}:`, formatError);
+                      }
+                    } else {
+                      console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
                     }
-                  } else {
-                    console.warn(`Formaat bestand niet gevonden: ${formatPath}`);
                   }
                 }
               }
+
+              // Update het bestand in de database met alle nieuwe informatie
+              const fileSize = fs.statSync(jpgPath).size;
+              await strapi.entityService.update('plugin::upload.file', file.id, {
+                data: {
+                  name: jpgName,
+                  ext: '.jpg',
+                  mime: 'image/jpeg',
+                  url: jpgUrl,
+                  size: fileSize,
+                  formats: Object.keys(newFormats).length > 0 ? newFormats : null,
+                }
+              });
+
+              // Verwijder het oorspronkelijke bestand NA de database-update
+              fs.unlinkSync(originalPath);
+
+              // ADDED type and newType
+              conversionResults.push({
+                id: file.id,
+                name: fileData.name, // Original name from fileData
+                success: true,
+                newName: jpgName, // New name
+                newUrl: jpgUrl,
+                type: fileData.ext?.substring(1).toUpperCase() || 'N/A', // Original type from fileData.ext
+                newType: jpgName.split('.').pop().toUpperCase() || 'N/A' // New type from jpgName
+              });
+            } catch (conversionError) {
+              console.error('Fout bij conversie:', conversionError);
+              conversionResults.push({
+                id: file.id,
+                name: fileData.name, // Original name from fileData
+                success: false,
+                message: `Conversiefout: ${conversionError.message}`
+              });
             }
-
-            // Update het bestand in de database met alle nieuwe informatie
-            const fileSize = fs.statSync(jpgPath).size;
-            await strapi.entityService.update('plugin::upload.file', file.id, {
-              data: {
-                name: jpgName,
-                ext: '.jpg',
-                mime: 'image/jpeg',
-                url: jpgUrl,
-                size: fileSize,
-                formats: Object.keys(newFormats).length > 0 ? newFormats : null,
-              }
-            });
-
-            // Verwijder het oorspronkelijke bestand NA de database-update
-            fs.unlinkSync(originalPath);
-
+          } else {
             conversionResults.push({
               id: file.id,
-              name: file.name,
-              success: true,
-              newName: jpgName,
-              newUrl: jpgUrl
-            });
-          } catch (conversionError) {
-            console.error('Fout bij conversie:', conversionError);
-            conversionResults.push({
-              id: file.id,
-              name: file.name,
+              name: fileData.name, // Original name from fileData
               success: false,
-              message: `Conversiefout: ${conversionError.message}`
+              message: fileData.mime === 'image/jpeg' || fileData.mime === 'image/jpg' ?
+                'Bestand is al in JPG-formaat' :
+                'Bestandstype niet ondersteund voor conversie'
             });
           }
-        } else {
+        } catch (fileError) {
+          console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
           conversionResults.push({
             id: file.id,
             name: file.name,
             success: false,
-            message: fileData.mime === 'image/jpeg' ?
-              'Bestand is al in JPG-formaat' :
-              'Bestandstype niet ondersteund voor conversie'
+            message: `Fout: ${fileError.message}`
           });
         }
-      } catch (fileError) {
-        console.error(`Fout bij verwerken van bestand ${file.name}:`, fileError);
-        conversionResults.push({
-          id: file.id,
-          name: file.name,
-          success: false,
-          message: `Fout: ${fileError.message}`
-        });
       }
+
+      // Stuur een signaal naar de Strapi admin om de mediabibliotheek te vernieuwen
+      try {
+        strapi.eventHub.emit('media-library.assets.refresh');
+      } catch (err) {
+        console.error("Fout bij vernieuwen van media library:", err);
+      }
+
+      // console.log("JPG conversie voltooid. Resultaten:", {
+      //   totalConverted: conversionResults.filter(r => r.success).length,
+      //   totalFailed: conversionResults.filter(r => !r.success).length
+      // });
+
+      return ctx.send({
+        message: 'JPG conversieproces voltooid.',
+        results: conversionResults,
+        totalConverted: conversionResults.filter(r => r.success).length,
+        totalFailed: conversionResults.filter(r => !r.success).length,
+      }, 200);
+
+    } catch (error) {
+      console.error('Fout bij JPG conversie:', error);
+      return ctx.badRequest(`Fout bij JPG conversie: ${error.message}`);
     }
-
-    // Stuur een signaal naar de Strapi admin om de mediabibliotheek te vernieuwen
-    try {
-      strapi.eventHub.emit('media-library.assets.refresh');
-    } catch (err) {
-      console.error("Fout bij vernieuwen van media library:", err);
-    }
-
-    // console.log("JPG conversie voltooid. Resultaten:", {
-    //   totalConverted: conversionResults.filter(r => r.success).length,
-    //   totalFailed: conversionResults.filter(r => !r.success).length
-    // });
-
-    return ctx.send({
-      message: 'JPG conversieproces voltooid.',
-      results: conversionResults,
-      totalConverted: conversionResults.filter(r => r.success).length,
-      totalFailed: conversionResults.filter(r => !r.success).length,
-    }, 200);
-
-  } catch (error) {
-    console.error('Fout bij JPG conversie:', error);
-    return ctx.badRequest(`Fout bij JPG conversie: ${error.message}`);
-  }
-},
+  },
   async setAutoConvert(ctx) {
     try {
       const { enabled } = ctx.request.body;
 
-      // console.log('Auto convert is:', enabled)
+      console.log('[SET-AUTO-CONVERT] Auto convert is:', enabled)
 
 
       if (typeof enabled !== 'boolean') {
@@ -741,9 +769,7 @@ const createControllerMethods = ({ strapi }) => ({
       return ctx.badRequest(`Fout: ${error.message}`);
     }
   },
-  // Tijdelijke opslag voor geselecteerde bestanden per sessie
   selectedFilesStore: new Map(),
-
   async setSelectedFiles(ctx) {
     try {
       const data = ctx.request.body;
@@ -765,7 +791,6 @@ const createControllerMethods = ({ strapi }) => ({
       return ctx.badRequest('Er is een fout opgetreden bij het opslaan van selecties', { error: error.message });
     }
   },
-
   async getSelectedFiles(ctx) {
     return ctx.send({
       files: selectedFiles

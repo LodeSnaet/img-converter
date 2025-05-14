@@ -10,6 +10,8 @@ const fetchImages = {
           return 'PNG';
         case 'image/jpg':
           return 'JPG';
+        case 'image/jpeg':
+          return 'JPG';
         case 'image/webp':
           return 'WEBP';
         default:

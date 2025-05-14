@@ -2,8 +2,6 @@
 const selectedFiles = {
   setSelectedFiles: async (files) => {
     try {
-
-
       const response = await fetch('/img-webp/selected-files', {
         method: 'POST',
         headers: {

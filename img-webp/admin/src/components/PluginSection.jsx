@@ -1,460 +1,8 @@
-// import React, { useEffect, useState, useCallback } from 'react';
-// import {
-//   Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th,
-//   Checkbox, Pagination, NextLink, PageLink, PreviousLink, Alert, Tooltip, Toggle
-// } from "@strapi/design-system";
-// import styled from 'styled-components';
-// import { useIntl } from 'react-intl';
-//
-// import { getTranslation } from "../utils/getTranslation";
-// import fetchImages from '../api/fetch-images';
-// import convertImages from '../api/convert-images';
-// import utilsImages from '../api/utils-images';
-// import autoConvertImages from '../api/auto-convert-images';
-// import selectedFiles from '../api/selected-files';
-//
-// // Styled components
-// const StrikethroughText = styled(Typography)`
-//   text-decoration: line-through;
-//   color: #d02b20;
-//   font-size: 0.8rem;
-// `;
-//
-// const NewTypeText = styled(Typography)`
-//   color: #5cb176;
-//   font-weight: bold;
-//   margin-left: 4px;
-// `;
-//
-// const PaddedBox = styled(Box)`
-//   display: flex;
-//   flex-direction: column;
-//   padding-block-start: 40px;
-//   padding-block-end: 40px;
-// `;
-//
-// const Nav = styled(Pagination)`
-//   display: flex;
-//   justify-content: center;
-//   width: 100%;
-// `;
-//
-// const ContentBox = styled(Box)`
-//   display: flex;
-//   flex-direction: column;
-//   align-items: start;
-//   gap: 16px;
-//   border-radius: 4px;
-//   background-color: #fff;
-//   padding-block: 24px;
-//   padding-inline: 32px;
-// `;
-//
-// const FlexBox = styled(Box)`
-//   display: flex;
-//   flex-direction: row;
-//   gap: 16px;
-// `;
-//
-// const MainBox = styled(Main)`
-//   padding-inline-start: 56px;
-//   padding-inline-end: 56px;
-// `;
-//
-// const DescriptionTypography = styled(Typography)`
-//   margin-block-start: ${({ theme }) => theme.spaces.s1};
-// `;
-//
-// const NotificationContainer = styled(Box)`
-//   position: fixed;
-//   top: 70px;
-//   left: 50%;
-//   transform: translateX(-50%);
-//   z-index: 1000;
-//   width: 500px;
-//   max-width: 90vw;
-//   animation: slideDown 0.3s ease-out;
-//
-//   @keyframes slideDown {
-//     0% {
-//       transform: translate(-50%, -20px);
-//       opacity: 0;
-//     }
-//     100% {
-//       transform: translate(-50%, 0);
-//       opacity: 1;
-//     }
-//   }
-// `;
-//
-// function PluginSection() {
-//   const { formatMessage } = useIntl();
-//   const PAGE_SIZE = 7;
-//
-//   // State
-//   const [files, setFiles] = useState([]);
-//   const [page, setPage] = useState(1);
-//   const [conversionResults, setConversionResults] = useState([]);
-//   const [showAlert, setShowAlert] = useState(false);
-//   const [alertInfo, setAlertInfo] = useState({ type: 'success', message: '' });
-//   const [autoConvert, setAutoConvert] = useState(false);
-//   // Nieuwe state voor geselecteerde bestanden
-//   const [checkedFiles, setCheckedFiles] = useState([]);
-//
-//   // Pagination berekeningen
-//   const startIndex = (page - 1) * PAGE_SIZE;
-//   const endIndex = startIndex + PAGE_SIZE;
-//   const paginatedFiles = files.slice(startIndex, endIndex);
-//   const pageCount = Math.ceil(files.length / PAGE_SIZE);
-//   const areAllSelected = paginatedFiles.length > 0 &&
-//     paginatedFiles.every(file => checkedFiles.some(f => f.id === file.id));
-//
-//   // Effect hooks
-//   useEffect(() => {
-//     const getSettings = async () => {
-//       const enabled = await autoConvertImages.getStatus();
-//       setAutoConvert(enabled);
-//     };
-//     getSettings();
-//   }, []);
-//
-//   // Event handlers
-//   const showNotification = (type, message) => {
-//     setAlertInfo({ type, message });
-//     setShowAlert(true);
-//     setTimeout(() => setShowAlert(false), 5000);
-//   };
-//
-//   const handleFetchImages = async (e) => {
-//     e.preventDefault();
-//     const response = await fetchImages.fetchFiles();
-//     setFiles(response.data);
-//     setConversionResults([]);
-//   };
-//
-//   const handleCheckboxChange = useCallback((file) => {
-//     return async () => {
-//       // Controleer of het bestand al geselecteerd is
-//       const isSelected = checkedFiles.some(f => f.id === file.id);
-//       // Maak nieuwe array met geselecteerde bestanden (toevoegen of verwijderen)
-//       const newCheckedFiles = isSelected
-//         ? checkedFiles.filter(f => f.id !== file.id)
-//         : [...checkedFiles, file];
-//
-//       // Update lokale staat
-//       setCheckedFiles(newCheckedFiles);
-//
-//       try {
-//         // Update API met geselecteerde bestanden
-//         await selectedFiles.setSelectedFiles(newCheckedFiles);
-//       } catch (error) {
-//         showNotification(
-//           'danger',
-//           `Fout bij het bijwerken van de selectie: ${error.message}`
-//         );
-//         // Als er een fout optreedt, herstel de vorige status
-//         setCheckedFiles(checkedFiles);
-//       }
-//     };
-//   }, [checkedFiles, showNotification]);
-//
-//   const handleSelectAll = async () => {
-//     // Als alle bestanden geselecteerd zijn, deselecteer alles, anders selecteer alles
-//     const newCheckedFiles = areAllSelected ? [] : paginatedFiles;
-//
-//     // Update lokale staat
-//     setCheckedFiles(newCheckedFiles);
-//
-//     try {
-//       // Update API met geselecteerde bestanden
-//       await selectedFiles.setSelectedFiles(newCheckedFiles);
-//     } catch (error) {
-//       showNotification(
-//         'danger',
-//         `Fout bij het bijwerken van de selectie: ${error.message}`
-//       );
-//       // Als er een fout optreedt, herstel de vorige status
-//       setCheckedFiles(checkedFiles);
-//     }
-//   };
-//
-//   const handleToggleChange = async () => {
-//     const newState = !autoConvert;
-//     setAutoConvert(newState);
-//
-//     try {
-//       await autoConvertImages.toggle(newState);
-//       showNotification(
-//         'success',
-//         `Automatisch converteren naar WebP is ${newState ? 'ingeschakeld' : 'uitgeschakeld'}.`
-//       );
-//     } catch (error) {
-//       setAutoConvert(!newState);
-//       showNotification(
-//         'danger',
-//         `Fout bij het bijwerken van instellingen: ${error.message}`
-//       );
-//     }
-//   };
-//
-//   // Helper functies
-//   const isFileSelected = (file) => checkedFiles.some(f => f.id === file.id);
-//   const isFileConverted = (fileId) => conversionResults.some(r => r.id === fileId && r.success);
-//   const getConversionResult = (fileId) => conversionResults.find(r => r.id === fileId);
-//
-//
-//   return (
-//     <MainBox>
-//       {showAlert && (
-//         <NotificationContainer>
-//           <Alert
-//             closeLabel="Sluiten"
-//             title={
-//               alertInfo.type === 'success' ? 'Gelukt!' :
-//               alertInfo.type === 'warning' ? 'Let op!' :
-//               alertInfo.type === 'info' ? 'Informatie' : 'Fout'
-//             }
-//             variant={alertInfo.type}
-//             onClose={() => setShowAlert(false)}
-//           >
-//             {alertInfo.message}
-//           </Alert>
-//         </NotificationContainer>
-//       )}
-//
-//       <PaddedBox>
-//         <Typography variant="alpha">
-//           {formatMessage({
-//             id: getTranslation('homepage.title'),
-//             defaultMessage: 'Img-Webp Plugin',
-//           })}
-//         </Typography>
-//         <DescriptionTypography variant="omega" textColor="neutral600">
-//           {formatMessage({
-//             id: getTranslation('homepage.description'),
-//             defaultMessage: 'Convert and optimize images to WebP format during media upload.',
-//           })}
-//         </DescriptionTypography>
-//       </PaddedBox>
-//
-//       <Box style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'start' }}>
-//         <Box style={{display:'flex', flexDirection: 'row', justifyContent: 'space-around', gap: '16px'}}>
-//           <ContentBox>
-//             <PaddedBox style={{ paddingBlock: '0px' }}>
-//               <Typography variant="beta">
-//                 {formatMessage({
-//                   id: getTranslation('buttonpage.description'),
-//                   defaultMessage: 'Convert and optimize images to WebP format during media upload.',
-//                 })}
-//               </Typography>
-//               {files.length > 0 && checkedFiles.length === 0 && (
-//                 <Typography variant="epsilon" textColor="neutral600" style={{ marginBottom: '8px' }}>
-//                   Please select an image before you can start an action
-//                 </Typography>
-//               )}
-//             </PaddedBox>
-//             <LinkButton onClick={handleFetchImages} size="M" variant="default">
-//               Fetch Image Files
-//             </LinkButton>
-//           </ContentBox>
-//
-//           <ContentBox>
-//             <PaddedBox style={{ paddingBlock: '0px' }}>
-//               <Typography variant="beta">
-//                 {formatMessage({
-//                   id: getTranslation('autoconvert.description'),
-//                   defaultMessage: 'Turn on auto convert to WebP?',
-//                 })}
-//               </Typography>
-//             </PaddedBox>
-//             <Toggle
-//               label="Auto convert to WebP"
-//               hint="When checked images get converted to WebP's automatically when uploaded."
-//               name="autoConvertToggle"
-//               onLabel="Yes"
-//               offLabel="No"
-//               checked={autoConvert}
-//               onChange={handleToggleChange}
-//             />
-//           </ContentBox>
-//         </Box>
-//
-//         {files.length > 0 && checkedFiles.length > 0 && (
-//           <ContentBox>
-//             <PaddedBox style={{ paddingBlock: '0px' }}>
-//               <Typography variant="beta">
-//                 {formatMessage({
-//                   id: getTranslation('convertpage.description'),
-//                   defaultMessage: 'Select action you want to complete',
-//                 })}
-//               </Typography>
-//               <Typography variant="epsilon" textColor="neutral600" style={{ marginBottom: '8px' }}>
-//                 {checkedFiles.length} {checkedFiles.length === 1 ? 'bestand' : 'bestanden'} geselecteerd
-//               </Typography>
-//             </PaddedBox>
-//
-//             <Box>
-//               {!utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) &&
-//                !utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) &&
-//                !utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) && (
-//                 <Typography variant="pi" textColor="danger600">
-//                   Geen van de geselecteerde bestanden kan worden geconverteerd. Selecteer afbeeldingsbestanden.
-//                 </Typography>
-//               )}
-//             </Box>
-//
-//             <FlexBox>
-//               {utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) ? (
-//                 <LinkButton onClick={convertImages.img2webp} size="M" variant="default">
-//                   IMG - WEBP
-//                 </LinkButton>
-//               ) : checkedFiles.length > 0 && (
-//                 <Tooltip description="Geen bestanden geselecteerd die naar WebP kunnen worden geconverteerd">
-//                   <Box>
-//                     <LinkButton disabled size="M" variant="secondary">
-//                       IMG - WEBP
-//                     </LinkButton>
-//                   </Box>
-//                 </Tooltip>
-//               )}
-//
-//               {utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) ? (
-//                 <LinkButton onClick={convertImages.img2png} size="M" variant="default">
-//                   IMG - PNG
-//                 </LinkButton>
-//               ) : checkedFiles.length > 0 && (
-//                 <Tooltip description="Geen bestanden geselecteerd die naar PNG kunnen worden geconverteerd">
-//                   <Box>
-//                     <LinkButton disabled size="M" variant="secondary">
-//                       IMG - PNG
-//                     </LinkButton>
-//                   </Box>
-//                 </Tooltip>
-//               )}
-//
-//               {utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) ? (
-//                 <LinkButton onClick={convertImages.img2jpg} size="M" variant="default">
-//                   IMG - JPG
-//                 </LinkButton>
-//               ) : checkedFiles.length > 0 && (
-//                 <Tooltip description="Geen bestanden geselecteerd die naar JPG kunnen worden geconverteerd">
-//                   <Box>
-//                     <LinkButton disabled size="M" variant="secondary">
-//                       IMG - JPG
-//                     </LinkButton>
-//                   </Box>
-//                 </Tooltip>
-//               )}
-//             </FlexBox>
-//           </ContentBox>
-//         )}
-//
-//         {files.length > 0 && (
-//           <ContentBox>
-//             <Table colCount={files.length + 1}>
-//               <Thead>
-//                 <Tr>
-//                   <Th style={{ pointerEvents: 'auto' }}>
-//                     <Checkbox
-//                       aria-label="Select all entries"
-//                       checked={areAllSelected}
-//                       indeterminate={checkedFiles.length > 0 && !areAllSelected}
-//                       onCheckedChange={handleSelectAll}
-//                     />
-//                   </Th>
-//                   <Th><Typography variant="sigma">PREVIEW</Typography></Th>
-//                   <Th><Typography variant="sigma">ID</Typography></Th>
-//                   <Th><Typography variant="sigma">URL</Typography></Th>
-//                   <Th><Typography variant="sigma">TYPE</Typography></Th>
-//                 </Tr>
-//               </Thead>
-//               <Tbody>
-//                 {paginatedFiles.map((file) => {
-//                   const conversionResult = getConversionResult(file.id);
-//                   const isConverted = isFileConverted(file.id);
-//
-//                   return (
-//                     <Tr key={file.id}>
-//                       <Td style={{ pointerEvents: 'auto' }}>
-//                         <Checkbox
-//                           aria-label={`Select file ${file.name}`}
-//                           checked={isFileSelected(file)}
-//                           onCheckedChange={handleCheckboxChange(file)}
-//                         />
-//                       </Td>
-//                       <Td>
-//                         <Box padding={1} style={{ width: '50px', height: '50px' }}>
-//                           {file.url ? (
-//                             <img
-//                               src={`${file.url}?t=${Date.now()}`}
-//                               alt={`Preview of ${file.name || file.id}`}
-//                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-//                             />
-//                           ) : (
-//                             <Typography variant="omega">No preview</Typography>
-//                           )}
-//                         </Box>
-//                       </Td>
-//                       <Td>
-//                         <Typography textColor="neutral800">{file.id}</Typography>
-//                       </Td>
-//                       <Td>
-//                         <Typography textColor="neutral800">{file.name || 'N/A'}</Typography>
-//                       </Td>
-//                       <Td>
-//                         {isConverted ? (
-//                           <Box>
-//                             <StrikethroughText>{conversionResult.name.split('.').pop().toUpperCase()}</StrikethroughText>
-//                             <NewTypeText>{file.type}</NewTypeText>
-//                           </Box>
-//                         ) : (
-//                           <Typography textColor="neutral800">{file.type || 'N/A'}</Typography>
-//                         )}
-//                       </Td>
-//                     </Tr>
-//                   );
-//                 })}
-//               </Tbody>
-//             </Table>
-//
-//             {/* Paginering */}
-//             {pageCount > 1 && (
-//               <Nav pageCount={pageCount} currentPage={page} onPageChange={setPage}>
-//                 <PreviousLink onClick={() => setPage(prev => Math.max(1, prev - 1))}>
-//                   Vorige
-//                 </PreviousLink>
-//
-//                 {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNumber => (
-//                   <PageLink
-//                     key={pageNumber}
-//                     number={pageNumber}
-//                     onClick={() => setPage(pageNumber)}
-//                     aria-current={pageNumber === page ? 'page' : undefined}
-//                   >
-//                     {pageNumber}
-//                   </PageLink>
-//                 ))}
-//
-//                 <NextLink onClick={() => setPage(prev => Math.min(pageCount, prev + 1))}>
-//                   Volgende
-//                 </NextLink>
-//               </Nav>
-//             )}
-//           </ContentBox>
-//         )}
-//       </Box>
-//     </MainBox>
-//   );
-// }
-//
-// export default PluginSection;
-
-
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box, LinkButton, Main, Typography, Table, Td, Thead, Tbody, Tr, Th,
   Checkbox, Pagination, NextLink, PageLink, PreviousLink, Alert, Tooltip, Toggle,
-  Loader // Import Loader if you want to show a loading state during conversion
+  Loader
 } from "@strapi/design-system";
 import styled from 'styled-components';
 import { useIntl } from 'react-intl';
@@ -464,9 +12,8 @@ import fetchImages from '../api/fetch-images';
 import convertImages from '../api/convert-images'; // Import the refactored API module
 import utilsImages from '../api/utils-images';
 import autoConvertImages from '../api/auto-convert-images';
-import selectedFiles from '../api/selected-files'; // Used to update backend selection state
+import selectedFiles from '../api/selected-files';
 
-// Styled components (keeping them as provided)
 const StrikethroughText = styled(Typography)`
   text-decoration: line-through;
   color: #d02b20;
@@ -540,6 +87,15 @@ const NotificationContainer = styled(Box)`
   }
 `;
 
+const StyledPageLink = styled(PageLink)`
+  ${({ active, theme }) =>
+  active &&
+  `
+    border: 1px solid ${theme.colors.primary600}; // Use Strapi's primary blue color
+    border-radius: 5px;
+  `}
+`;
+
 function PluginSection() {
   const { formatMessage } = useIntl();
   const PAGE_SIZE = 7;
@@ -559,9 +115,7 @@ function PluginSection() {
   const endIndex = startIndex + PAGE_SIZE;
   const paginatedFiles = files.slice(startIndex, endIndex);
   const pageCount = Math.ceil(files.length / PAGE_SIZE);
-  // Check if all files on the *current page* are selected
-  const areAllSelected = paginatedFiles.length > 0 &&
-    paginatedFiles.every(file => checkedFiles.some(f => f.id === file.id));
+  const areAllSelected = paginatedFiles.length > 0 && paginatedFiles.every(file => checkedFiles.some(f => f.id === file.id));
 
   // Effect hooks
   useEffect(() => {
@@ -576,17 +130,7 @@ function PluginSection() {
       }
     };
     getSettings();
-
-    // Optionally, fetch initial files on mount as well
-    // handleFetchImages(); // Uncomment if you want files to load automatically
-
-  }, []); // Empty dependency array means this runs once on mount
-
-  // Effect to clear conversion results when files change (e.g., pagination, refetch)
-  useEffect(() => {
-    setConversionResults([]);
-  }, [files]);
-
+  }, []);
 
   // Event handlers
   const showNotification = useCallback((type, message) => {
@@ -733,17 +277,9 @@ function PluginSection() {
   const handleConvertJPG = useCallback(() => handleConvert(convertImages.img2jpg, 'JPG'), [handleConvert]);
 
 
-  // Helper functions (keeping as provided, assuming they use state correctly)
-  // Note: utilsImages.hasConvertibleFiles... should ideally check `checkedFiles`
-  // based on how the buttons are conditionally rendered. Let's assume they are updated
-  // or update the calls below to pass `checkedFiles` and potentially `files` if needed
-  // Looking at the original snippet again, it seems they DO expect checkedFiles and files:
-  // {utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) ? (...)}
-  // Let's make sure the helpers in utilsImages accept these arguments.
   const isFileSelected = (file) => checkedFiles.some(f => f.id === file.id);
   const isFileConverted = (fileId) => conversionResults.some(r => r.id === fileId && r.success);
   const getConversionResult = (fileId) => conversionResults.find(r => r.id === fileId);
-
 
   return (
     <MainBox>
@@ -847,7 +383,7 @@ function PluginSection() {
 
             {/* Check if *any* selected files are convertible by any method */}
             <Box>
-              {!utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) &&
+              {!utilsImages.hasConvertibleFilesForWEBP(checkedFiles, files) &&
                 !utilsImages.hasConvertibleFilesForPNG(checkedFiles, files) &&
                 !utilsImages.hasConvertibleFilesForJPG(checkedFiles, files) && (
                   <Typography variant="pi" textColor="danger600">
@@ -858,7 +394,7 @@ function PluginSection() {
 
             <FlexBox style={{alignItems: 'center', gap: '16px'}}>
               {/* WebP Convert Button */}
-              {utilsImages.hasConvertibleFilesForWebP(checkedFiles, files) ? (
+              {utilsImages.hasConvertibleFilesForWEBP(checkedFiles, files) ? (
                 <LinkButton onClick={handleConvertWebP} size="M" variant="default" disabled={isLoading}>
                   IMG - WEBP
                 </LinkButton>
@@ -937,10 +473,8 @@ function PluginSection() {
                 {paginatedFiles.map((file) => {
                   const conversionResult = getConversionResult(file.id);
                   const isConverted = isFileConverted(file.id);
-                  // Get the full file details from the 'files' state if needed,
-                  // but `paginatedFiles` should already contain enough info.
-                  // Assuming `file` in `paginatedFiles` is a complete file object.
 
+                  console.log(`Result for file ${file.id}:`, file);
                   return (
                     <Tr key={file.id}>
                       <Td>
@@ -971,18 +505,13 @@ function PluginSection() {
                         <Typography textColor="neutral800">{file.name || 'N/A'}</Typography>
                       </Td>
                       <Td>
-                        {/* Display new type if converted, otherwise show original type */}
                         {isConverted ? (
                           <Box>
-                            {/* Assuming the conversionResult includes the original name or type to show strikethrough */}
-                            {/* The original code used conversionResult.name, implying results might have original name.
-                                 Let's assume file.ext or file.type gives the original extension.
-                             */}
-                            <StrikethroughText>{file.ext?.toUpperCase() || 'UNKNOWN'}</StrikethroughText> {/* Use original file extension/type */}
-                            <NewTypeText>{file.type?.toUpperCase() || 'UNKNOWN'}</NewTypeText> {/* Use file.type for the potentially new type */}
+                            <StrikethroughText>{conversionResult.type}</StrikethroughText>
+                            <NewTypeText>{conversionResult.newType}</NewTypeText>
                           </Box>
                         ) : (
-                          <Typography textColor="neutral800">{file.type?.toUpperCase() || 'N/A'}</Typography>
+                          <Typography textColor="neutral800">{file.type || 'N/A'}</Typography>
                         )}
                       </Td>
                     </Tr>
@@ -999,17 +528,19 @@ function PluginSection() {
                 </PreviousLink>
 
                 {Array.from({ length: pageCount }, (_, i) => i + 1).map(pageNumber => (
-                  <PageLink
+                  <StyledPageLink
                     key={pageNumber}
                     number={pageNumber}
                     onClick={() => setPage(pageNumber)}
+                    active={pageNumber === page}
                     aria-current={pageNumber === page ? 'page' : undefined}
                   >
                     {pageNumber}
-                  </PageLink>
+                  </StyledPageLink>
                 ))}
 
-                <NextLink onClick={() => setPage(prev => Math.min(pageCount, prev + 1))}>
+
+            <NextLink onClick={() => setPage(prev => Math.min(pageCount, prev + 1))}>
                   {formatMessage({ id: getTranslation('pagination.next'), defaultMessage: 'Next' })}
                 </NextLink>
               </Nav>

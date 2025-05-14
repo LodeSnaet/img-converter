@@ -1,6 +1,6 @@
 const utilsImages = {
   // Bijwerken van utilsImages functies
-  hasConvertibleFilesForWebP: (checkedFiles, files) => {
+  hasConvertibleFilesForWEBP: (checkedFiles, files) => {
     if (checkedFiles.length === 0) return false;
 
     return checkedFiles.some(selectedFile => {
@@ -11,7 +11,7 @@ const utilsImages = {
       return (
         fullFile.mime.startsWith('image/') &&
         fullFile.mime !== 'image/webp' &&
-        fullFile.mime !== 'image/svg+xml'
+        fullFile.mime !== 'image/svg+xml' // Typically SVG is not converted to WebP
       );
     });
   },
@@ -24,6 +24,7 @@ const utilsImages = {
       if (!fullFile || !fullFile.mime) return false;
 
       // Controleer of het een afbeelding is die naar PNG kan worden geconverteerd
+      // Allow conversion from JPG and WebP to PNG, but not from SVG or PNG itself
       return (
         fullFile.mime.startsWith('image/') &&
         fullFile.mime !== 'image/png' &&
@@ -39,11 +40,10 @@ const utilsImages = {
       const fullFile = files.find(f => f.id === selectedFile.id);
       if (!fullFile || !fullFile.mime) return false;
 
-      // Controleer of het een afbeelding is die naar JPG kan worden geconverteerd
+      // Controleer of het een PNG of WebP afbeelding is die naar JPG kan worden geconverteerd
       return (
-        fullFile.mime.startsWith('image/') &&
-        fullFile.mime !== 'image/jpeg' &&
-        fullFile.mime !== 'image/jpg'
+        fullFile.mime === 'image/png' ||
+        fullFile.mime === 'image/webp'
       );
     });
   }
