@@ -1,10 +1,10 @@
 {
-  "img-converter-link": "IMG-WEBP",
-  "img-converter.plugin.settings.section.label": "Image to WEBP",
-  "img-converter.plugin.name": "Image to WEBP",
-  "img-converter.homepage.title": "Image Converter Dashboard",
-  "img-converter.homepage.description": "Manage your image conversion settings here.",
-  "img-converter.buttonpage.description": "Fetch all the uploaded images in a list",
-  "img-converter.convertpage.description": "Select action you want to complete",
-  "img-converter.autoconvert.description": "Turn on auto convert to WebP?"
+  "strapi-plugin-img-converter-link": "IMG-WEBP",
+  "strapi-plugin-img-converter.plugin.settings.section.label": "Image to WEBP",
+  "strapi-plugin-img-converter.plugin.name": "Image to WEBP",
+  "strapi-plugin-img-converter.homepage.title": "Image Converter Dashboard",
+  "strapi-plugin-img-converter.homepage.description": "Manage your image conversion settings here.",
+  "strapi-plugin-img-converter.buttonpage.description": "Fetch all the uploaded images in a list",
+  "strapi-plugin-img-converter.convertpage.description": "Select action you want to complete",
+  "strapi-plugin-img-converter.autoconvert.description": "Turn on auto convert to WebP?"
 }
