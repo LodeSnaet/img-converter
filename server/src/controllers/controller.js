@@ -47,7 +47,7 @@ const createControllerMethods = ({ strapi }) => ({
         },
       });
 
-      console.log('Files:', files);
+      // console.log('Files:', files);
 
       const images = files
         .map(file => ({
@@ -776,7 +776,7 @@ const createControllerMethods = ({ strapi }) => ({
     try {
       const { enabled } = ctx.request.body;
 
-      console.log('[SET-AUTO-CONVERT] Auto convert is:', enabled)
+      // console.log('[SET-AUTO-CONVERT] Auto convert is:', enabled)
 
 
       if (typeof enabled !== 'boolean') {
