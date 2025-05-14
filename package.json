@@ -1,5 +1,5 @@
 {
-  "version": "3.0.5",
+  "version": "1.0.0",
   "keywords": [],
   "type": "commonjs",
   "exports": {
@@ -54,9 +54,9 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "img-webp",
-    "displayName": "img-webp",
-    "description": "This plugin will automatically convert all images (not SVGs) into WEBPs."
+    "name": "img-converter",
+    "displayName": "img-converter",
+    "description": "This plugin will automatically convert all images (not SVGs and GIFs) into WEBPs."
   },
   "name": "img-converter",
   "description": "This plugin will automatically convert all images (not SVGs) into WEBPs.",
