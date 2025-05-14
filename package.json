@@ -54,7 +54,7 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "strapi-plugin-img-converter",
+    "name": "img-converter",
     "displayName": "img-converter",
     "description": "This plugin will automatically convert all images (not SVGs and GIFs) into WEBPs."
   },
