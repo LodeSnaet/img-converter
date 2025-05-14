@@ -37,33 +37,33 @@ const createControllerMethods = ({ strapi }) => ({
       .getWelcomeMessage();
   },
   async fetchAllImages(ctx) {
-  try {
-    const files = await strapi.documents('plugin::upload.file').findMany({
-      filters: {
-        mime: {
-          $startsWith: 'image/',
+    try {
+      const files = await strapi.documents('plugin::upload.file').findMany({
+        filters: {
+          mime: {
+            $startsWith: 'image/',
+          },
         },
-      },
-    });
+      });
 
-    console.log('Files:', files);
+      console.log('Files:', files);
 
-    const images = files
-      .map(file => ({
-        id: file.id,
-        name: file.name,
-        url: file.url,
-        mime: file.mime,
-        type: determineFileType(file.mime)
-      }))
-      .filter(image => image.type !== null);
+      const images = files
+        .map(file => ({
+          id: file.id,
+          name: file.name,
+          url: file.url,
+          mime: file.mime,
+          type: determineFileType(file.mime)
+        }))
+        .filter(image => image.type !== null);
 
-    return ctx.send({ data: images });
-  } catch (error) {
-    console.error('Error fetching files using Document Service:', error);
-    return ctx.send({ data: [] }, 500);
-  }
-},
+      return ctx.send({ data: images });
+    } catch (error) {
+      console.error('Error fetching files using Document Service:', error);
+      return ctx.send({ data: [] }, 500);
+    }
+  },
   async autoWebp(ctx) {
     const storedValue = await strapi.store({
       type: 'plugin',
@@ -71,9 +71,9 @@ const createControllerMethods = ({ strapi }) => ({
       key: 'autoConvertEnabled'
     }).get();
 
-    const enabled = storedValue?.value === true;
+    const enabled = storedValue?.value === true || false;
 
-    console.log(`[AUTO-WEBP] Auto-conversie is ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
+    // console.log(`[AUTO-WEBP] Auto-conversie is ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
     if (enabled) {
       try {
         // Controleer of er een bestandsupload is
