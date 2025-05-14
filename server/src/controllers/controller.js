@@ -786,7 +786,7 @@ const createControllerMethods = ({ strapi }) => ({
       // Sla de voorkeur op in de plugin configuratie
       await strapi.store({
         type: 'plugin',
-        name: 'img-converter',
+        name: 'strapi-plugin-img-converter',
         key: 'autoConvertEnabled'
       }).set({ value: enabled });
 
@@ -806,7 +806,7 @@ const createControllerMethods = ({ strapi }) => ({
       // Haal de voorkeur op uit de plugin configuratie
       const storedValue = await strapi.store({
         type: 'plugin',
-        name: 'img-converter',
+        name: 'strapi-plugin-img-converter',
         key: 'autoConvertEnabled'
       }).get();
 
