@@ -26,8 +26,8 @@
     "watch": "strapi-plugin watch",
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
-    "push": "yalc push",
-    "publish": "yalc publish"
+    "push:yalc": "yalc push",
+    "publish:yalc": "yalc publish"
   },
   "dependencies": {
     "@strapi/design-system": "^2.0.0-rc.23",

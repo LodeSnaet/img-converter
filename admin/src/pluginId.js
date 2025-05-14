@@ -1,2 +1,2 @@
-export const PLUGIN_ID = 'img-converter';
+export const PLUGIN_ID = 'strapi-plugin-img-converter';
 

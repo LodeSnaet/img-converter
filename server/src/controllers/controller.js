@@ -32,7 +32,7 @@ const createControllerMethods = ({ strapi }) => ({
 
   index(ctx) {
     ctx.body = strapi
-      .plugin('img-converter')
+      .plugin('strapi-plugin-img-converter')
       // the name of the service file & the method.
       .service('service')
       .getWelcomeMessage();
@@ -68,7 +68,7 @@ const createControllerMethods = ({ strapi }) => ({
   async autoWebp(ctx) {
     const storedValue = await strapi.store({
       type: 'plugin',
-      name: 'img-converter',
+      name: 'strapi-plugin-img-converter',
       key: 'autoConvertEnabled'
     }).get();
 
