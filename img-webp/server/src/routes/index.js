@@ -8,6 +8,15 @@ export default {
     type: 'admin',
     routes: [
       {
+        method: 'GET',
+        path: '/files', // Or any path you prefer for your plugin's endpoint
+        handler: 'controller.fetchAllImages',
+        config: {
+          policies: [],
+          auth: false, // Adjust authentication as needed
+        },
+      },
+      {
         method: 'POST',
         path: '/convert-to-webp',
         handler: 'controller.convertToWebp',

@@ -1,5 +1,4 @@
 const utilsImages = {
-  // Bijwerken van utilsImages functies
   hasConvertibleFilesForWEBP: (checkedFiles, files) => {
     if (checkedFiles.length === 0) return false;
 
@@ -46,7 +45,30 @@ const utilsImages = {
         fullFile.mime === 'image/webp'
       );
     });
+  },
+  determineFileType: (mime) => {
+    try {
+      const excludeTypes = ['image/svg+xml', 'video/mp4', 'image/gif','application/pdf'];
+      if (excludeTypes.includes(mime)) {
+        return null;
+      }
+      switch (mime) {
+        case 'image/png':
+          return 'PNG';
+        case 'image/jpg':
+          return 'JPG';
+        case 'image/jpeg':
+          return 'JPG';
+        case 'image/webp':
+          return 'WEBP';
+        default:
+          return 'OTHER';
+      }
+    } catch (err) {
+      console.log(500, 'Fout bij detecteren bestandsformaat');
+    }
   }
+
 }
 
 export default utilsImages;

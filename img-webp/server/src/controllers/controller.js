@@ -4,6 +4,29 @@ const sharp = require('sharp');
 import convertUtils from '../utils/convert-utils';
 let selectedFiles = [];
 
+const determineFileType = function (mime) {
+  try {
+    const excludeTypes = ['image/svg+xml', 'video/mp4', 'image/gif','application/pdf'];
+    if (excludeTypes.includes(mime)) {
+      return null;
+    }
+    switch (mime) {
+      case 'image/png':
+        return 'PNG';
+      case 'image/jpg':
+        return 'JPG';
+      case 'image/jpeg':
+        return 'JPG';
+      case 'image/webp':
+        return 'WEBP';
+      default:
+        return 'OTHER';
+    }
+  } catch (err) {
+    console.log(500, 'Fout bij detecteren bestandsformaat');
+  }
+};
+
 const createControllerMethods = ({ strapi }) => ({
 
   index(ctx) {
@@ -13,6 +36,34 @@ const createControllerMethods = ({ strapi }) => ({
       .service('service')
       .getWelcomeMessage();
   },
+  async fetchAllImages(ctx) {
+  try {
+    const files = await strapi.documents('plugin::upload.file').findMany({
+      filters: {
+        mime: {
+          $startsWith: 'image/',
+        },
+      },
+    });
+
+    console.log('Files:', files);
+
+    const images = files
+      .map(file => ({
+        id: file.id,
+        name: file.name,
+        url: file.url,
+        mime: file.mime,
+        type: determineFileType(file.mime)
+      }))
+      .filter(image => image.type !== null);
+
+    return ctx.send({ data: images });
+  } catch (error) {
+    console.error('Error fetching files using Document Service:', error);
+    return ctx.send({ data: [] }, 500);
+  }
+},
   async autoWebp(ctx) {
     const storedValue = await strapi.store({
       type: 'plugin',
@@ -796,7 +847,7 @@ const createControllerMethods = ({ strapi }) => ({
     return ctx.send({
       files: selectedFiles
     });
-  }
+  },
 });
 
 export default createControllerMethods;

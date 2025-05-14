@@ -1,39 +1,9 @@
-// admin/src/api/convert-images.js
-
-// Removed: import fetchImages from './fetch-images'; // Not used in this file
-
-// Helper function to fetch currently selected files from the backend
-// Adjusted to return { files: [...] } to match your original snippet's assumption
-const fetchSelectedFiles = async () => {
-  try {
-    const response = await fetch('/img-webp/selected-files', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json', // Still good practice
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response' })); // Try parsing, fallback if not JSON
-      const errorMessage = `Failed to fetch selected files: ${response.status} ${errorData.message || response.statusText}`;
-      console.error(errorMessage, errorData);
-      throw new Error(errorMessage); // Throw error for component to catch
-    }
-
-    const result = await response.json();
-    // Assume backend GET returns { files: [...] } as per your snippet
-    return result;
-
-  } catch (error) {
-    console.error('Error in fetchSelectedFiles:', error);
-    throw error; // Re-throw for the caller
-  }
-};
+import fetchImages from './fetch-images';
 
 const convertImages = {
   img2webp: async () => {
     try {
-      const selectedData = await fetchSelectedFiles();
+      const selectedData = await fetchImages.fetchSelectedFiles();
       const filesToConvert = selectedData.files; // Use the structure from your snippet
 
       // Component will check for empty list and show warning BEFORE calling this
@@ -72,7 +42,7 @@ const convertImages = {
 
   img2png: async () => {
     try {
-      const selectedData = await fetchSelectedFiles();
+      const selectedData = await fetchImages.fetchSelectedFiles();
       const filesToConvert = selectedData.files;
 
       if (!filesToConvert || filesToConvert.length === 0) {
@@ -108,7 +78,7 @@ const convertImages = {
 
   img2jpg: async () => {
     try {
-      const selectedData = await fetchSelectedFiles();
+      const selectedData = await fetchImages.fetchSelectedFiles();
       const filesToConvert = selectedData.files;
 
       if (!filesToConvert || filesToConvert.length === 0) {
