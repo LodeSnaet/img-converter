@@ -14,7 +14,7 @@ const fetchImages = {
 
       const data = await response.json();
 
-      console.log('Fetched raw data from backend: ', data); // Log the full response data
+      // console.log('Fetched raw data from backend: ', data); // Log the full response data
 
       // Validate the structure: expect an object with a 'data' array
       if (data && Array.isArray(data.data)) {

@@ -1,4 +1,3 @@
-import { PLUGIN_ID } from '../../../admin/src/pluginId';
 
 const fs = require('fs');
 const path = require('path');
@@ -33,7 +32,7 @@ const createControllerMethods = ({ strapi }) => ({
 
   index(ctx) {
     ctx.body = strapi
-      .plugin(PLUGIN_ID)
+      .plugin('img-converter')
       // the name of the service file & the method.
       .service('service')
       .getWelcomeMessage();
@@ -69,11 +68,11 @@ const createControllerMethods = ({ strapi }) => ({
   async autoWebp(ctx) {
     const storedValue = await strapi.store({
       type: 'plugin',
-      name: PLUGIN_ID,
+      name: 'img-converter',
       key: 'autoConvertEnabled'
     }).get();
 
-    const enabled = storedValue?.value === true || false;
+    const enabled = storedValue.value;
 
     // console.log(`[AUTO-WEBP] Auto-conversie is ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}`);
     if (enabled) {
@@ -787,7 +786,7 @@ const createControllerMethods = ({ strapi }) => ({
       // Sla de voorkeur op in de plugin configuratie
       await strapi.store({
         type: 'plugin',
-        name: PLUGIN_ID,
+        name: 'img-converter',
         key: 'autoConvertEnabled'
       }).set({ value: enabled });
 
@@ -804,16 +803,15 @@ const createControllerMethods = ({ strapi }) => ({
   },
   async getAutoConvert(ctx) {
     try {
-
       // Haal de voorkeur op uit de plugin configuratie
       const storedValue = await strapi.store({
         type: 'plugin',
-        name: PLUGIN_ID,
+        name: 'img-converter',
         key: 'autoConvertEnabled'
       }).get();
 
       // De standaardwaarde is 'false' als er nog niets is opgeslagen
-      const enabled = storedValue?.value === true;
+      const enabled = storedValue.value;
 
       return ctx.send({
         enabled,
