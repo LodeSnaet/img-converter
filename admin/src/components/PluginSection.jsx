@@ -474,7 +474,7 @@ function PluginSection() {
                   const conversionResult = getConversionResult(file.id);
                   const isConverted = isFileConverted(file.id);
 
-                  console.log(`Result for file ${file.id}:`, file);
+                  // console.log(`Result for file ${file.id}:`, file);
                   return (
                     <Tr key={file.id}>
                       <Td>

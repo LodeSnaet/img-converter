@@ -1,11 +1,11 @@
 // server/src/utils/convert-utils.js
 const convertUtils = {
   shouldConvert: (currentMime, target) => {
-    console.log(`Server-side conversie check - MIME: ${currentMime}, Target: ${target}`);
+    // console.log(`Server-side conversie check - MIME: ${currentMime}, Target: ${target}`);
 
     // Als de huidige MIME niet bekend is, kunnen we niet converteren
     if (!currentMime) {
-      console.log('Geen MIME type beschikbaar');
+      // console.log('Geen MIME type beschikbaar');
       return false;
     }
 
@@ -13,7 +13,7 @@ const convertUtils = {
     if ((currentMime === 'image/webp' && target === 'webp') ||
       (currentMime === 'image/png' && target === 'png') ||
       ((currentMime === 'image/jpeg' || currentMime === 'image/jpg') && target === 'jpg')) {
-      console.log('Bestand is al in doelformaat');
+      // console.log('Bestand is al in doelformaat');
       return false;
     }
 
@@ -25,7 +25,7 @@ const convertUtils = {
     };
 
     const canConvert = targetMap[target]?.includes(currentMime);
-    console.log(`Kan converteren: ${canConvert}`);
+    // console.log(`Kan converteren: ${canConvert}`);
     return canConvert;
   }
 };
